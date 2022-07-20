@@ -11,7 +11,6 @@ pip install BVlain
 ```
 
 ### Usage  examples
-* The full documentation can be found <a href="https://docs.google.com/document/d/1BEAFZMixqhALx9qomEWUBnqEDROE0EKUpwn-AzH5FCY/edit">here</a>
 
 #### Lazy way
 ```Python
