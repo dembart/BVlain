@@ -13,5 +13,12 @@ doc = [
     'sphinx~=4.2.0',
     'myst-parser',
     'furo',
-    'nbsphinx'
+    'nbsphinx',
+    'ase',
+    'numpy',
+    'pandas',
+    'scipy',
+    'networkx',
+    'pymatgen'
+
 ]
