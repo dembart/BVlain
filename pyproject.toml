@@ -15,7 +15,3 @@ doc = [
     'furo',
     'nbsphinx'
 ]
-
-packages = [
-    { include = "package_name" },
-]
