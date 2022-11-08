@@ -1,3 +1,7 @@
+"""
+Lain - main class of BVlain library.
+"""
+
 # import re
 # import pickle
 # import math
