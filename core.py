@@ -26,7 +26,7 @@ Lain - main class of BVlain library.
 # from scipy import ndimage
 # from mpl_toolkits import mplot3d
 # from scipy.ndimage import measurements
-
+__version__ = "0.1.0"
 class Lain:
     """ 
     The class is used to perform BVSE calculations and related tasks.
