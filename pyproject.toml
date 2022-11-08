@@ -14,12 +14,12 @@ doc = [
     'myst-parser',
     'furo',
     'nbsphinx',
-    'ase',
-    'numpy',
-    'pandas',
-    'scipy',
-    'networkx',
-    'pymatgen'
+#    'ase',
+#    'numpy',
+#    'pandas',
+#    'scipy',
+#    'networkx',
+#    'pymatgen'
 
 ]
 
