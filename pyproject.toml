@@ -4,7 +4,7 @@ requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "tests"
+name = "core"
 authors = [{name = "Artem Dembitskiy", email = "art.dembitskiy@gmail.com"}]
 dynamic = ["version", "description"]
 
