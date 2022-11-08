@@ -1,2 +1,2 @@
 #
-from .core import Lain
+from core import Lain

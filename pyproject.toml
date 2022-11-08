@@ -22,3 +22,9 @@ doc = [
     'pymatgen'
 
 ]
+
+[tool.poetry]
+# ...
+packages = [
+    { include = "core.py" },
+]
