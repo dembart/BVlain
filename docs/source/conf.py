@@ -54,7 +54,7 @@ source_suffix = {
 }
 
 
-autodoc_mock_imports = ["ase", 'networkx', 'pymatgen', 'core']
+autodoc_mock_imports = ["ase", 'networkx', 'pymatgen']
 
 
 
