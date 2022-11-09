@@ -13,16 +13,21 @@ $ pip install bvlain
 ```python
 from bvlain import Lain
 
-file = 'LiFePO4.cif'
+file = 'LiFePO4_mp-19017_symmetrized.cif'
 calc = lain(verbose = False)
-calc.read_file(file)
+st = calc.read_file(file)
 
 params = {'mobile_ion': 'Li1+',
 		  'r_cut': 10.0,
 		  'resolution': 0.2,
 		  'k': 100
 }
-calc.bvse_distribution(**params)
-calc.percolation_analysis(encut = 5.0)
+_ = calc.bvse_distribution(**params)
+energies = calc.percolation_analysis(encut = 5.0)
 ```
-For more info, see {doc}`notebooks/tutorials`, {doc}`notebooks/theory` and {doc}`lain_`
+The output is threshold energies for 1-3D percolation 
+
+```python
+>>> {'E_1D': 0.4395, 'E_2D': 3.3301, 'E_3D': 3.3594}
+```
+For more examples/info, see {doc}`notebooks/tutorials`, {doc}`notebooks/theory` and {doc}`lain_`

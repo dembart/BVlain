@@ -198,8 +198,8 @@
           <section id="api">
 <h1>API<a class="headerlink" href="#api" title="Permalink to this headline">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="core.Lain">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">core.</span></span><span class="sig-name descname"><span class="pre">Lain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#core.Lain" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="bvlain.Lain">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bvlain.</span></span><span class="sig-name descname"><span class="pre">Lain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bvlain.Lain" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>The class is used to perform BVSE calculations and related tasks.</p>
 <dl class="field-list simple">
@@ -208,8 +208,8 @@
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="core.Lain.NEB">
-<span class="sig-name descname"><span class="pre">NEB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_jump_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#core.Lain.NEB" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="bvlain.Lain.NEB">
+<span class="sig-name descname"><span class="pre">NEB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">images</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_jump_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bvlain.Lain.NEB" title="Permalink to this definition">#</a></dt>
 <dd><p>Create POSCAR files for DFT-NEB calculations in VASP.
 Tracer ion migration trajectory.</p>
 <dl class="field-list simple">
@@ -231,8 +231,8 @@ Tracer ion migration trajectory.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="core.Lain.bvse_distribution">
-<span class="sig-name descname"><span class="pre">bvse_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mobile_ion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#core.Lain.bvse_distribution" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="bvlain.Lain.bvse_distribution">
+<span class="sig-name descname"><span class="pre">bvse_distribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mobile_ion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bvlain.Lain.bvse_distribution" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate BVSE distribution for a given mobile ion.
 Note: It is a vectorized method. Works fast,</p>
 <blockquote>
@@ -258,8 +258,8 @@ Never ever set resolution parameter lower then 0.1.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="core.Lain.energy_profile">
-<span class="sig-name descname"><span class="pre">energy_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_jump_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#core.Lain.energy_profile" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="bvlain.Lain.energy_profile">
+<span class="sig-name descname"><span class="pre">energy_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pbc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_jump_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bvlain.Lain.energy_profile" title="Permalink to this definition">#</a></dt>
 <dd><p>Construct energy profile between source and target.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -281,8 +281,8 @@ Never ever set resolution parameter lower then 0.1.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="core.Lain.grd">
-<span class="sig-name descname"><span class="pre">grd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#core.Lain.grd" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="bvlain.Lain.grd">
+<span class="sig-name descname"><span class="pre">grd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bvlain.Lain.grd" title="Permalink to this definition">#</a></dt>
 <dd><dl class="simple">
 <dt>Write BVSE distribution volumetric file for VESTA 3.0.</dt><dd><p>Note: Run it after self.bvse_distribution method</p>
 </dd>
@@ -300,8 +300,8 @@ or os.getcwd() if structure was provided as pymatgen’s object</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="core.Lain.mismatch">
-<span class="sig-name descname"><span class="pre">mismatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#core.Lain.mismatch" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="bvlain.Lain.mismatch">
+<span class="sig-name descname"><span class="pre">mismatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">r_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bvlain.Lain.mismatch" title="Permalink to this definition">#</a></dt>
 <dd><p>Calculate bond valence sum mismatch for each site.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -317,8 +317,8 @@ or os.getcwd() if structure was provided as pymatgen’s object</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="core.Lain.percolation_analysis">
-<span class="sig-name descname"><span class="pre">percolation_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#core.Lain.percolation_analysis" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="bvlain.Lain.percolation_analysis">
+<span class="sig-name descname"><span class="pre">percolation_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bvlain.Lain.percolation_analysis" title="Permalink to this definition">#</a></dt>
 <dd><p>Find percolation energy and dimensionality of a migration network.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -334,8 +334,8 @@ or os.getcwd() if structure was provided as pymatgen’s object</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="core.Lain.read_file">
-<span class="sig-name descname"><span class="pre">read_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oxi_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#core.Lain.read_file" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="bvlain.Lain.read_file">
+<span class="sig-name descname"><span class="pre">read_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oxi_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bvlain.Lain.read_file" title="Permalink to this definition">#</a></dt>
 <dd><p>Structure reader. Possible formats are .cif, POSCAR.
 It is a bit modified pymatgen’s function Structure.from_file.
 Note: Works only with ordered structures</p>
@@ -343,7 +343,7 @@ Note: Works only with ordered structures</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>file</strong> (<em>str</em>) – pathway to CIF or POSCAR</p></li>
-<li><p><strong>check_oxi</strong> (<em>boolean</em><em>, </em><em>False by default</em>) – If true will try to assignoxi states by pymategen’s BVAnalyzer</p></li>
+<li><p><strong>check_oxi</strong> (<em>boolean</em><em>, </em><em>False by default</em>) – If true will try to assign oxi states by pymategen’s BVAnalyzer</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -357,8 +357,8 @@ Note: Works only with ordered structures</p>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="core.Lain.read_structure">
-<span class="sig-name descname"><span class="pre">read_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">st</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oxi_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#core.Lain.read_structure" title="Permalink to this definition">#</a></dt>
+<dt class="sig sig-object py" id="bvlain.Lain.read_structure">
+<span class="sig-name descname"><span class="pre">read_structure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">st</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oxi_check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bvlain.Lain.read_structure" title="Permalink to this definition">#</a></dt>
 <dd><p>Read structure from pymatgen’s Structure.
 Note: Works only with ordered structures</p>
 <dl class="field-list simple">

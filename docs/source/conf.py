@@ -13,6 +13,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(1, os.path.abspath('../../bvlain'))
 
 
 # -- Project information -----------------------------------------------------
@@ -51,6 +52,11 @@ mathjax_config = {
 source_suffix = {
     '.md': 'markdown',
 }
+
+
+autodoc_mock_imports = ["ase", 'networkx', 'pymatgen']
+
+
 
 
 # Add any paths that contain templates here, relative to this directory.

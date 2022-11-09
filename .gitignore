@@ -1,35 +1,54 @@
-*.pyc
-doc/build/
-/dist
-MANIFEST
-.DS_Store
-*/.DS_Store
-*.traj
-/build
-/ase.egg-info
-/ase/db/static/jsmol
-doc/ase/dft/bztable.rst
-doc/tutorials/deltacodesdft/fit.json
-doc/ase/io/formatoptions.rst
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
 
-# Editor backup files
-*~
+# C extensions
+*.so
 
-# Ignore PyCharm settings
-.idea/
+# Distribution / packaging
+bin/
+build/
+develop-eggs/
+dist/
+eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Ignore VS Code settings
-.vscode/
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
 
-# Vim swap files:
-.*.sw?
-
-# Translation template
-ase/gui/po/ag.pot
-
-# Pytest and code coverage:
-.cache
+# Unit test / coverage reports
+.tox/
 .coverage
-coverage-html
+.cache
+nosetests.xml
+coverage.xml
 
-.mypy_cache
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Rope
+.ropeproject
+
+# Django stuff:
+*.log
+*.pot
+
+# system files
+.DS_Store
+**/**/.DS_Store
+
+# Sphinx documentation
+docs/_build/

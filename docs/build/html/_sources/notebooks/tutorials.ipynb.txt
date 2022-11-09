@@ -2,7 +2,7 @@
  "cells": [
   {
    "cell_type": "markdown",
-   "id": "fdb402da",
+   "id": "e61f9ed4",
    "metadata": {},
    "source": [
     "# Tutorials\n",
@@ -17,7 +17,7 @@
     }
    },
    "cell_type": "markdown",
-   "id": "67325a92",
+   "id": "c77f86b1",
    "metadata": {},
    "source": [
     "![NaVPO4F_iso.png](attachment:NaVPO4F_iso.png)\n",
@@ -26,7 +26,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "0a4a1c4b",
+   "id": "175ae08e",
    "metadata": {},
    "source": [
     "## How it is supposed to work\n",
@@ -57,7 +57,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "ddff8811",
+   "id": "3974d9a1",
    "metadata": {},
    "source": [
     "### Import"
@@ -66,7 +66,7 @@
   {
    "cell_type": "code",
    "execution_count": 1,
-   "id": "996e6a60",
+   "id": "302e67ea",
    "metadata": {},
    "outputs": [],
    "source": [
@@ -75,7 +75,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "561adc77",
+   "id": "f713fddd",
    "metadata": {},
    "source": [
     "### Calculation of BVSE distribution"
@@ -84,7 +84,7 @@
   {
    "cell_type": "code",
    "execution_count": 2,
-   "id": "07dc0c15",
+   "id": "88e9c9b8",
    "metadata": {},
    "outputs": [
     {
@@ -119,7 +119,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "b4b85d26",
+   "id": "cff6ceb4",
    "metadata": {},
    "source": [
     "### Percolation analysis"
@@ -128,7 +128,7 @@
   {
    "cell_type": "code",
    "execution_count": 3,
-   "id": "e9c19255",
+   "id": "5284767b",
    "metadata": {},
    "outputs": [
     {
@@ -153,10 +153,10 @@
     }
    },
    "cell_type": "markdown",
-   "id": "fe909ff7",
+   "id": "a310cc7b",
    "metadata": {},
    "source": [
-    "That's it. As you could see, there is a quit low activation threshold for 1D percolation (see fig.2). At 0.45 eV the percolation network becomes 3-dimensional (not shown). Note that the percolation thresholds are found with 0.01 eV precision.\n",
+    "That's it. As you could see, there is a quite low activation threshold for 1D percolation (see fig.2). At 0.45 eV the percolation network becomes 3-dimensional (not shown). Note that the percolation thresholds are found with 0.01 eV precision.\n",
     "\n",
     "![map_1D.png](attachment:map_1D.png)\n",
     "<center>Figure 2. Na$^+$ 1D percolation trajectory in VPO$_4$F framework. Black spheres are Na$^{+}$ ions</center> "
@@ -164,7 +164,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "9a6c9391",
+   "id": "923bde0f",
    "metadata": {},
    "source": [
     "### Write .grd file for VESTA 3.0"
@@ -173,7 +173,7 @@
   {
    "cell_type": "code",
    "execution_count": 4,
-   "id": "dc05c2bb",
+   "id": "b89c28fe",
    "metadata": {},
    "outputs": [
     {
@@ -191,7 +191,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "13f7f125",
+   "id": "0718d054",
    "metadata": {},
    "source": [
     "Now you can visualize the diffusion network in VESTA 3.0. "
@@ -199,7 +199,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "52ff9d46",
+   "id": "abf81ad6",
    "metadata": {},
    "source": [
     "### Energy profile"
@@ -207,7 +207,7 @@
   },
   {
    "cell_type": "markdown",
-   "id": "799254c8",
+   "id": "0116dc53",
    "metadata": {},
    "source": [
     "If you are interested in local Na$^+$ transitions between equilibrium sites you can use `Lain.energy_profile` method. \n",
@@ -219,7 +219,7 @@
   {
    "cell_type": "code",
    "execution_count": 5,
-   "id": "68ba53a9",
+   "id": "5adf80ad",
    "metadata": {},
    "outputs": [
     {
@@ -263,22 +263,22 @@
   },
   {
    "cell_type": "markdown",
-   "id": "bb194dc0",
+   "id": "9848a9aa",
    "metadata": {},
    "source": [
     "As you could see the profile looks awkward. There are at least two reasons:  \n",
     "\n",
     "1) 0.2 resolution is a bit rough  \n",
     "\n",
-    "2) the algorihm of pathway search does not look for a saddle point intentionaly. It looks for a shortest pathway having minimum energy threshold.  \n",
+    "2) the algorihm of pathway search does not look for a saddle point intentionally. It looks for a shortest pathway having minimum energy threshold.  \n",
     "\n",
     "\n",
-    "It means we should believe this activation energy, but the profile is not, strictly speaking, an optimized trajectory of the ion migration. However, it is very close to the one. So we can use it as the initial guess migration pathway for DFT-NEB calculations in VASP (see below).\n"
+    "This means that one must believe this activation energy, but the whole profile, strictly speaking, is not a fully optimized ion migration trajectory within this method. Such approach is a trade-off between simplicity of the path finding algorithm and its accuracy. However, the found path is very close to the real minimum energy path. So we can use it as the initial guess pathway for DFT-NEB calculations in VASP (see below).\n"
    ]
   },
   {
    "cell_type": "markdown",
-   "id": "5dbb64ec",
+   "id": "47419e46",
    "metadata": {},
    "source": [
     "### Input POSCAR files for DFT-NEB (in VASP)"
@@ -287,7 +287,7 @@
   {
    "cell_type": "code",
    "execution_count": 6,
-   "id": "ae603a6a",
+   "id": "bd7d5d42",
    "metadata": {},
    "outputs": [
     {
@@ -322,17 +322,17 @@
     }
    },
    "cell_type": "markdown",
-   "id": "d30de4d7",
+   "id": "0faac645",
    "metadata": {},
    "source": [
-    "The interpolated pathway looks good (to me) (see fig.3 below). Note that the geometry of the path is far away from linear intepolation (which is frequently used as initial guess). In practice it means that DFT relaxation will take less time when BVSE interpolated path is used as initial guess.\n",
+    "The interpolated pathway looks good (to me) (see fig.3 below). Note that the geometry of the path is far away from linear intepolation (which is frequently used as initial guess). In practice it means that DFT relaxation will take less time when BVSE interpolated path is used as the initial guess.\n",
     "![Interpolated_trajectory.png](attachment:Interpolated_trajectory.png)\n",
     "<center>Figure 3. Interpolated trajectory of Na1-Na2 vacancy-assisted hop</center> "
    ]
   },
   {
    "cell_type": "markdown",
-   "id": "c857c30d",
+   "id": "a2ba3622",
    "metadata": {},
    "source": [
     "### BVS mismatch\n",
@@ -342,7 +342,7 @@
   {
    "cell_type": "code",
    "execution_count": 7,
-   "id": "8ab76bfd",
+   "id": "95d5aa14",
    "metadata": {},
    "outputs": [
     {

@@ -208,20 +208,24 @@
 <h2>Example<a class="headerlink" href="#example" title="Permalink to this headline">#</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bvlain</span> <span class="kn">import</span> <span class="n">Lain</span>
 
-<span class="n">file</span> <span class="o">=</span> <span class="s1">&#39;LiFePO4.cif&#39;</span>
+<span class="n">file</span> <span class="o">=</span> <span class="s1">&#39;LiFePO4_mp-19017_symmetrized.cif&#39;</span>
 <span class="n">calc</span> <span class="o">=</span> <span class="n">lain</span><span class="p">(</span><span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span>
-<span class="n">calc</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+<span class="n">st</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">read_file</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
 
 <span class="n">params</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;mobile_ion&#39;</span><span class="p">:</span> <span class="s1">&#39;Li1+&#39;</span><span class="p">,</span>
 		  <span class="s1">&#39;r_cut&#39;</span><span class="p">:</span> <span class="mf">10.0</span><span class="p">,</span>
 		  <span class="s1">&#39;resolution&#39;</span><span class="p">:</span> <span class="mf">0.2</span><span class="p">,</span>
 		  <span class="s1">&#39;k&#39;</span><span class="p">:</span> <span class="mi">100</span>
 <span class="p">}</span>
-<span class="n">calc</span><span class="o">.</span><span class="n">bvse_distribution</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
-<span class="n">calc</span><span class="o">.</span><span class="n">percolation_analysis</span><span class="p">(</span><span class="n">encut</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">)</span>
+<span class="n">_</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">bvse_distribution</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+<span class="n">energies</span> <span class="o">=</span> <span class="n">calc</span><span class="o">.</span><span class="n">percolation_analysis</span><span class="p">(</span><span class="n">encut</span> <span class="o">=</span> <span class="mf">5.0</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>For more info, see <a class="reference internal" href="notebooks/tutorials.html"><span class="doc">Tutorials</span></a>, <a class="reference internal" href="notebooks/theory.html"><span class="doc">Theory behid</span></a> and <a class="reference internal" href="lain_.html"><span class="doc">API</span></a></p>
+<p>The output is threshold energies for 1-3D percolation</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="p">{</span><span class="s1">&#39;E_1D&#39;</span><span class="p">:</span> <span class="mf">0.4395</span><span class="p">,</span> <span class="s1">&#39;E_2D&#39;</span><span class="p">:</span> <span class="mf">3.3301</span><span class="p">,</span> <span class="s1">&#39;E_3D&#39;</span><span class="p">:</span> <span class="mf">3.3594</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>For more examples/info, see <a class="reference internal" href="notebooks/tutorials.html"><span class="doc">Tutorials</span></a>, <a class="reference internal" href="notebooks/theory.html"><span class="doc">Theory behid</span></a> and <a class="reference internal" href="lain_.html"><span class="doc">API</span></a></p>
 </section>
 </section>
 
