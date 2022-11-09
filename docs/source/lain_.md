@@ -1,7 +1,7 @@
 # API
 
 ```{eval-rst}
-.. autoclass:: bvlain.Lain
+.. autoclass:: bvlain.core.Lain
    :members:
    :undoc-members:
    :show-inheritance:
