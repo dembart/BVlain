@@ -44,6 +44,7 @@ extensions = [
 ]
 
 #add_module_names = False
+autodoc_mock_imports = ["ase", 'networkx', 'pymatgen']
 
 mathjax_config = {
     'TeX': {'equationNumbers': {'autoNumber': 'AMS', 'useLabelIds': True}},
@@ -54,7 +55,7 @@ source_suffix = {
 }
 
 
-autodoc_mock_imports = ["ase", 'networkx', 'pymatgen']
+
 
 
 
