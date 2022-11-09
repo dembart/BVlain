@@ -20,9 +20,8 @@ This library is under active development.
 
 usage
 application
-theory
+notebooks/theory
 notebooks/tutorials
-speed
 lain_
 
 ```

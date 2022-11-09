@@ -2,31 +2,33 @@
 Lain - main class of BVlain library.
 """
 
-# import re
-# import pickle
-# import math
-# import sys
-# import os 
-# import ase
-# import itertools
-# import scipy
-# import pandas as pd
-# import numpy as np
-# import networkx as nx
-# from ase.geometry import get_distances
-# from ase.neighborlist import NeighborList
-# from ase.io import read
-# from ase.build import make_supercell
-# from ase.data import atomic_numbers, covalent_radii
-# from pymatgen.core import Structure
-# from pymatgen.analysis.bond_valence import BVAnalyzer
-# from pymatgen.io.ase import AseAtomsAdaptor
-# from scipy.special import erfc
-# from scipy.spatial import cKDTree
-# from scipy import ndimage
-# from mpl_toolkits import mplot3d
-# from scipy.ndimage import measurements
-__version__ = "0.1.0"
+import re
+import pickle
+import sys
+import os 
+import ase
+import itertools
+import scipy
+import pandas as pd
+import numpy as np
+import networkx as nx
+from ase.geometry import get_distances
+from ase.neighborlist import NeighborList
+from ase.io import read
+from ase.build import make_supercell
+from ase.data import atomic_numbers, covalent_radii
+from pymatgen.core import Structure
+from pymatgen.analysis.bond_valence import BVAnalyzer
+from pymatgen.io.ase import AseAtomsAdaptor
+from scipy.special import erfc
+from scipy.spatial import cKDTree
+from scipy import ndimage
+from scipy.ndimage import measurements
+
+
+__version__ = "0.1.5"
+
+
 class Lain:
     """ 
     The class is used to perform BVSE calculations and related tasks.
@@ -75,7 +77,7 @@ class Lain:
         self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
         
         if oxi_check:
-            self.st = BVAnalyzer().get_oxi_state_decorated_structure(self.st)
+            self.st = BVAnalyzer(forbidden_species = ['O-', 'P3-']).get_oxi_state_decorated_structure(self.st)
             self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
             
         return self.st
@@ -199,7 +201,6 @@ class Lain:
 
         """
 
-#        with open('/Users/artemdembitskiy/Downloads/quantum_number.pkl', 'rb') as f:
         with open(self.quantum_file, 'rb') as f:
             quantum_number = pickle.load(f) 
             
@@ -212,16 +213,12 @@ class Lain:
         self.rc_mi = covalent_radii[self.num_mi]
         self.atoms.set_array('r_c', np.array([covalent_radii[num] for num in self.atoms.numbers]))
         self.atoms.set_array('n', np.array([quantum_number[num] for num in self.atoms.numbers]))
-        
         charges = self.atoms.get_array('oxi_states')
-        
         r_min = list()
         alpha = list()
         d0 = list()
+
         if self.q_mi > 0:
-            
-#            with open('/Users/artemdembitskiy/Downloads/data_BVSE.pkl', 'rb') as f:
-            #with open('/Users/artemdembitskiy/Desktop/lain_revised/data_cation_.pkl', 'rb') as f:
             with open(self.cation_file, 'rb') as f:
                 data = pickle.load(f) 
                 data = data[self.num_mi][self.q_mi]
@@ -237,8 +234,6 @@ class Lain:
                     alpha.append(np.nan)
                     d0.append(np.nan)
         else:
-#            with open('/Users/artemdembitskiy/Downloads/data_anion.pkl', 'rb') as f:
-            #with open('/Users/artemdembitskiy/Desktop/lain_revised/data_anion_.pkl') as f:
             with open(self.anion_file, 'rb') as f:
                 data = pickle.load(f)
                 data = data[self.num_mi][self.q_mi]
@@ -254,7 +249,6 @@ class Lain:
                     alpha.append(np.nan)
                     d0.append(np.nan)
                     
-            
         r_min = np.hstack(r_min)
         alpha = np.hstack(alpha)
         d0 = np.hstack(d0)
@@ -683,51 +677,34 @@ class Lain:
         return barrier
 
 
-    def percolation_analysis(self, mobile_ion = None, r_cut = 10.0, resolution = 0.2,
-                          encut = 5.0, k = 100):
-        
-        
-        """ 
-        Find percolation energy and dimensionality of a migration network
+
+    def percolation_analysis(self, encut = 5.0):
+
+
+        """ Find percolation energy and dimensionality of a migration network.
+
 
         Parameters
         ----------
-    
-        mobile_ion: str
-            ion, e.g. 'Li1+', 'F-'
-            
+
         encut: float, 5.0 by default
             cutoff energy above which barriers supposed to be np.inf
-            
-        resolution: float, 0.2 by default
-            distance between grid points
-            
-        r_cut: float, 10.0 by default
-            maximum distances for mobile ion - framework interaction
-            
-        k: int, 100 by default
-            maximum number of neighbours (used for KDTree search of neighbors)
         
         Returns
         ----------
         
         energies: dict
             infromation about percolation {'E_1D': float, 'E_2D': float, 'E_3D': float}
-        """
-        
 
-        self.bvse_distribution(mobile_ion = mobile_ion,
-                               resolution = resolution,
-                               r_cut = r_cut,
-                               k = k)
+        """
+
         
         energies = {}
-
         for i, dim in enumerate([3, 9, 27]):
             
             energy = self._percolation_energy(encut = encut, dim = dim)
             energies.update({f'E_{i+1}D': energy})
-        
+
         return energies
     
     
@@ -741,7 +718,7 @@ class Lain:
         ----------
 
         path_to_output: str or None (default)
-            folder where file should be create
+            folder where file should be created
             if not provided equals to the folder where structure file was read 
             or os.getcwd() if structure was provided as pymatgen's object
             
@@ -765,11 +742,9 @@ class Lain:
             name = os.path.basename(os.path.normpath(self.file)).split('.')[0]
             if path:
                 filename = os.path.join(path, f'lain_{name}.grd')
-#                filename = f'{path}/lain_{name}.grd'
             else:
                 path = os.path.dirname(os.path.realpath(self.file))
                 filename = os.path.join(path, f'lain_{name}.grd')
-                #filename = f'{path}/lain_{name}.grd'
 
         with open(filename, 'w+') as report:
 
@@ -851,7 +826,6 @@ class Lain:
 
         Parameters
         ----------
-        
         source: list
             fractional coordinate [x1, y1, z1]
         target: list
@@ -940,9 +914,7 @@ class Lain:
             atoms.append(self.num_mi)
             atoms.positions[-1] = pathway[i,:]
             path_new = os.path.join(os.path.join(path, 'NEB_input'), f'{i}'.zfill(2))
-#            path_new = f'{path}/NEB_input/' + f'{i}'.zfill(2)
             os.makedirs(path_new, exist_ok = True)
-#            filename = f'{path_new}/POSCAR'# + f'{i}'.zfill(2)
             filename = os.path.join(path_new, 'POSCAR')
             ase.io.write(filename, atoms, format = 'vasp')
             del atoms[-1]
@@ -952,11 +924,10 @@ class Lain:
             atoms.positions[-1] = pathway[i,:]
         folder = os.path.join(path, 'NEB_input')
         filename = os.path.join(folder, 'Interpolated_trajectory.cif')
-#        filename = f'{path}/NEB_input/interpolated_trajectory.cif'
         ase.io.write(filename, atoms, format = 'cif')
         
         if self.verbose:
-            print(f'Files were written to {path}\n')
+            print(f'Files were written to {path_new}\n')
             
         return pathway
 

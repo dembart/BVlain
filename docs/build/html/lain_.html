@@ -3,10 +3,10 @@
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="Speed tests" href="speed.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="prev" title="Tutorials" href="notebooks/tutorials.html" />
 
     <meta name="generator" content="sphinx-4.5.0, furo 2022.09.29"/>
-        <title>API - bvlain 0.1 documentation</title>
+        <title>API - bvlain 0.1.5 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=d81277517bee4d6b0349d71bb2661d4890b5617c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
@@ -123,7 +123,7 @@
       </label>
     </div>
     <div class="header-center">
-      <a href="index.html"><div class="brand">bvlain 0.1 documentation</div></a>
+      <a href="index.html"><div class="brand">bvlain 0.1.5 documentation</div></a>
     </div>
     <div class="header-right">
       <div class="theme-toggle-container theme-toggle-header">
@@ -146,7 +146,7 @@
       <div class="sidebar-sticky"><a class="sidebar-brand" href="index.html">
   
   
-  <span class="sidebar-brand-text">bvlain 0.1 documentation</span>
+  <span class="sidebar-brand-text">bvlain 0.1.5 documentation</span>
   
 </a><form class="sidebar-search-container" method="get" action="search.html" role="search">
   <input class="sidebar-search" placeholder=Search name="q" aria-label="Search">
@@ -158,9 +158,8 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="application.html">Why?</a></li>
-<li class="toctree-l1"><a class="reference internal" href="theory.html">Theory behid</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/theory.html">Theory behid</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="speed.html">Speed tests</a></li>
 <li class="toctree-l1 current current-page"><a class="current reference internal" href="#">API</a></li>
 </ul>
 
@@ -196,8 +195,8 @@
           </label>
         </div>
         <article role="main">
-          <section id="module-core">
-<span id="api"></span><h1>API<a class="headerlink" href="#module-core" title="Permalink to this headline">#</a></h1>
+          <section id="api">
+<h1>API<a class="headerlink" href="#api" title="Permalink to this headline">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="core.Lain">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">core.</span></span><span class="sig-name descname"><span class="pre">Lain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#core.Lain" title="Permalink to this definition">#</a></dt>
@@ -290,7 +289,7 @@ Never ever set resolution parameter lower then 0.1.</p>
 </dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>path_to_output</strong> (<em>str</em><em> or </em><em>None</em><em> (</em><em>default</em><em>)</em>) – folder where file should be create
+<dd class="field-odd"><p><strong>path_to_output</strong> (<em>str</em><em> or </em><em>None</em><em> (</em><em>default</em><em>)</em>) – folder where file should be created
 if not provided equals to the folder where structure file was read
 or os.getcwd() if structure was provided as pymatgen’s object</p>
 </dd>
@@ -319,17 +318,11 @@ or os.getcwd() if structure was provided as pymatgen’s object</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="core.Lain.percolation_analysis">
-<span class="sig-name descname"><span class="pre">percolation_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mobile_ion</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r_cut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resolution</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#core.Lain.percolation_analysis" title="Permalink to this definition">#</a></dt>
-<dd><p>Find percolation energy and dimensionality of a migration network</p>
+<span class="sig-name descname"><span class="pre">percolation_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#core.Lain.percolation_analysis" title="Permalink to this definition">#</a></dt>
+<dd><p>Find percolation energy and dimensionality of a migration network.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>mobile_ion</strong> (<em>str</em>) – ion, e.g. ‘Li1+’, ‘F-’</p></li>
-<li><p><strong>encut</strong> (<em>float</em><em>, </em><em>5.0 by default</em>) – cutoff energy above which barriers supposed to be np.inf</p></li>
-<li><p><strong>resolution</strong> (<em>float</em><em>, </em><em>0.2 by default</em>) – distance between grid points</p></li>
-<li><p><strong>r_cut</strong> (<em>float</em><em>, </em><em>10.0 by default</em>) – maximum distances for mobile ion - framework interaction</p></li>
-<li><p><strong>k</strong> (<em>int</em><em>, </em><em>100 by default</em>) – maximum number of neighbours (used for KDTree search of neighbors)</p></li>
-</ul>
+<dd class="field-odd"><p><strong>encut</strong> (<em>float</em><em>, </em><em>5.0 by default</em>) – cutoff energy above which barriers supposed to be np.inf</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>energies</strong> – infromation about percolation {‘E_1D’: float, ‘E_2D’: float, ‘E_3D’: float}</p>
@@ -395,14 +388,14 @@ Note: Works only with ordered structures</p>
         
         <div class="related-pages">
           
-          <a class="prev-page" href="speed.html">
+          <a class="prev-page" href="notebooks/tutorials.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Speed tests</div>
+                <div class="title">Tutorials</div>
                 
               </div>
             </a>

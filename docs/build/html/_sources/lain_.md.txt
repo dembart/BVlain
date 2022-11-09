@@ -1,7 +1,7 @@
 # API
 
 ```{eval-rst}
-.. automodule:: core
+.. autoclass:: core.Lain
    :members:
    :undoc-members:
    :show-inheritance:

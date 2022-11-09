@@ -24,7 +24,7 @@ copyright = '2022, Artem Dembitskiy'
 author = 'Artem Dembitskiy'
 
 # The full version, including alpha/beta/rc tags
-release = '0.1'
+release = '0.1.5'
 
 
 # -- General configuration ---------------------------------------------------
@@ -38,8 +38,15 @@ extensions = [
 	"sphinx.ext.autosectionlabel",
 	"sphinx.ext.autodoc",
 	"sphinx.ext.napoleon",
+	"sphinx.ext.mathjax",
 	"nbsphinx"
 ]
+
+#add_module_names = False
+
+mathjax_config = {
+    'TeX': {'equationNumbers': {'autoNumber': 'AMS', 'useLabelIds': True}},
+}
 
 source_suffix = {
     '.md': 'markdown',
