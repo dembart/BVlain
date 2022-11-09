@@ -4,7 +4,7 @@ requires = ["flit_core >=3.2,<4"]
 build-backend = "flit_core.buildapi"
 
 [project]
-name = "core"
+name = "bvlain"
 authors = [{name = "Artem Dembitskiy", email = "art.dembitskiy@gmail.com"}]
 dynamic = ["version", "description"]
 
@@ -14,17 +14,11 @@ doc = [
     'myst-parser',
     'furo',
     'nbsphinx',
-#    'ase',
-#    'numpy',
-#    'pandas',
-#    'scipy',
-#    'networkx',
-#    'pymatgen'
 
 ]
 
 [tool.poetry]
 # ...
 packages = [
-    { include = "core.py" },
+    { include = "bvlain" },
 ]
