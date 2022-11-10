@@ -235,6 +235,7 @@ class Lain:
                         d0.append(np.nan)
             except KeyError:
                 print('Oops. No BVSE data for a given combination of oxidation states.')
+                raise
         else:
             with open(self.anion_file, 'rb') as f:
                 data = pickle.load(f)
@@ -252,6 +253,7 @@ class Lain:
                         d0.append(np.nan)
             except KeyError:
                 print('Oops. No BVSE data for a given combination of oxidation states.')
+                raise
 
         r_min = np.hstack(r_min)
         alpha = np.hstack(alpha)
