@@ -20,7 +20,7 @@ var/
 .installed.cfg
 *.egg
 
-*.png
+theory.png
 
 # Installer logs
 pip-log.txt
