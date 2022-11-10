@@ -26,7 +26,7 @@ from scipy import ndimage
 from scipy.ndimage import measurements
 
 
-__version__ = "0.1.5"
+__version__ = "0.1.7"
 
 
 class Lain:
@@ -222,33 +222,37 @@ class Lain:
             with open(self.cation_file, 'rb') as f:
                 data = pickle.load(f) 
                 data = data[self.num_mi][self.q_mi]
-                
-            for num, charge in zip(self.atoms.numbers, charges):
-                if charge < 0:
-                    params = data[num][charge]
-                    r_min.append(params['r_min'])
-                    alpha.append(params['alpha'])
-                    d0.append(params['d0'])
-                else:
-                    r_min.append(np.nan)
-                    alpha.append(np.nan)
-                    d0.append(np.nan)
+            try:    
+                for num, charge in zip(self.atoms.numbers, charges):
+                    if charge < 0:
+                        params = data[num][charge]
+                        r_min.append(params['r_min'])
+                        alpha.append(params['alpha'])
+                        d0.append(params['d0'])
+                    else:
+                        r_min.append(np.nan)
+                        alpha.append(np.nan)
+                        d0.append(np.nan)
+            except KeyError:
+                print('Oops. No BVSE data for a given combination of oxidation states.')
         else:
             with open(self.anion_file, 'rb') as f:
                 data = pickle.load(f)
                 data = data[self.num_mi][self.q_mi]
-                
-            for num, charge in zip(self.atoms.numbers, charges):
-                if charge > 0:
-                    params = data[num][charge]
-                    r_min.append(params['r_min'])
-                    alpha.append(params['alpha'])
-                    d0.append(params['d0'])
-                else:
-                    r_min.append(np.nan)
-                    alpha.append(np.nan)
-                    d0.append(np.nan)
-                    
+            try:    
+                for num, charge in zip(self.atoms.numbers, charges):
+                    if charge > 0:
+                        params = data[num][charge]
+                        r_min.append(params['r_min'])
+                        alpha.append(params['alpha'])
+                        d0.append(params['d0'])
+                    else:
+                        r_min.append(np.nan)
+                        alpha.append(np.nan)
+                        d0.append(np.nan)
+            except KeyError:
+                print('Oops. No BVSE data for a given combination of oxidation states.')
+
         r_min = np.hstack(r_min)
         alpha = np.hstack(alpha)
         d0 = np.hstack(d0)
