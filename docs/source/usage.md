@@ -14,7 +14,7 @@ $ pip install bvlain
 from bvlain import Lain
 
 file = 'LiFePO4_mp-19017_symmetrized.cif'
-calc = lain(verbose = False)
+calc = Lain(verbose = False)
 st = calc.read_file(file)
 
 params = {'mobile_ion': 'Li1+',
