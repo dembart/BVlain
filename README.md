@@ -8,7 +8,7 @@ The library is under active development and it is not guaranteed that there are 
 
 Also might be helpfull:
 
-[perconet repo](https://github.com/seung-lab/connected-components-3d)
-[cc3d repo](https://github.com/wouterel/perconet)
+[cc3d repo](https://github.com/seung-lab/connected-components-3d)  
+[perconet repo](https://github.com/wouterel/perconet)
 
 
