@@ -600,10 +600,47 @@ class Lain:
         structure = scipy.ndimage.generate_binary_structure(3,3)
         labels, features = measurements.label(region < tr,
                                               structure = structure)
+        labels_with_pbc = self._apply_pbc(labels)
+        return labels_with_pbc, np.unique(labels)     # labels, features
 
-        return labels, features
+        
+
+    def _apply_pbc(self, labels):
+        
+        """ Apply periodic boundary conditions to the NxMxL np.array of labeled points.
 
 
+        Parameters
+        ----------
+
+        labels: np.array of NxMxL size
+            array of labeles (connected components)
+        
+        Returns
+        ----------
+        
+        labels, features: np.array of NxMxL size and np.array of its unique labels
+            the array returned implies pbc conditions
+
+        """
+
+        faces_left = [labels[-1, :, :],
+                      labels[:, -1, :],
+                      labels[:, :, -1]
+                     ]
+        faces_right = [labels[0, :, :],
+                       labels[:, 0, :],
+                       labels[:, :, 0]
+                      ]
+        for f1, f2 in zip(faces_left, faces_right):
+            for s in np.unique(f1):
+                if s == 0:
+                    continue
+                else:
+                    connect = np.unique(f2[f1 == s])
+                    for c in connect:
+                        labels[labels == c] = s
+        return labels
 
 
     def _percolation_dimension(self, labels, features):
@@ -626,16 +663,16 @@ class Lain:
         """
 
 
-        if features == 0:
+        if len(features) < 2:
             d = 0
-        if features == 1:
-            coords = np.argwhere(labels == features)
-            d = self._cross_boundary(coords, np.array(labels.shape)/3)
         else:
             ds = []
-            for feature in range(1, features):
-                coords = np.argwhere(labels == feature)
-                ds.append(self._cross_boundary(coords, np.array(labels.shape)/3))
+            for feature in features:
+                if feature == 0:
+                    continue
+                else:
+                    coords = np.argwhere(labels == feature)
+                    ds.append(self._cross_boundary(coords, np.array(labels.shape)/3))
             d = max(ds)
         return d
     
@@ -671,7 +708,7 @@ class Lain:
             count = count + 1
             probe = (emin + emax) / 2
             labels, features = self._connected_components(data, probe)
-            if features > 0:
+            if len(features) > 0:
                 d = self._percolation_dimension(labels, features)
                 if d >= dim:
                     emax = probe
