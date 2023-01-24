@@ -26,7 +26,7 @@ from scipy import ndimage
 from scipy.ndimage import measurements
 
 
-__version__ = "0.1.7"
+__version__ = "0.1.9"
 
 
 class Lain:
@@ -603,7 +603,7 @@ class Lain:
         labels_with_pbc = self._apply_pbc(labels)
         return labels_with_pbc, np.unique(labels)     # labels, features
 
-        
+
 
     def _apply_pbc(self, labels):
         
