@@ -26,7 +26,7 @@ from scipy import ndimage
 from scipy.ndimage import measurements
 
 
-__version__ = "0.1.9"
+__version__ = "0.1.9.1"
 
 
 class Lain:
@@ -61,7 +61,7 @@ class Lain:
         file: str
             pathway to CIF or POSCAR
             
-        check_oxi: boolean, False by default
+        oxi_check: boolean, False by default
             If true will try to assign oxi states by pymategen's BVAnalyzer
 
 
@@ -95,7 +95,7 @@ class Lain:
         st: pymatgen's Structure object
             Should be ordered
             
-        check_oxi: boolean, False by default)
+        oxi_check: boolean, False by default)
             If true will try to assignoxi states by pymategen's BVAnalyzer
 
 
@@ -743,7 +743,7 @@ class Lain:
 
         """
 
-        
+
 
         energies = {}
         for i, dim in enumerate([3, 9, 27]):
