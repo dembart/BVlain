@@ -176,9 +176,9 @@ class Lain:
         
         # a, b, c, angle(b,c), angle(a,c), angle(a,b)
         a, b, c, alpha, beta, gamma = cell.cellpar(radians = True) 
-        scale_a = 2*np.ceil(r_cut/max(a*np.sin(gamma), a*np.sin(beta))) + 1
-        scale_b = 2*np.ceil(r_cut/max(b*np.sin(gamma), b*np.sin(beta))) + 1
-        scale_c = 2*np.ceil(r_cut/max(c*np.sin(beta), c*np.sin(beta))) + 1
+        scale_a = 2*np.ceil(r_cut/min(a*np.sin(gamma), a*np.sin(beta))) + 1
+        scale_b = 2*np.ceil(r_cut/min(b*np.sin(gamma), b*np.sin(beta))) + 1
+        scale_c = 2*np.ceil(r_cut/min(c*np.sin(beta), c*np.sin(beta))) + 1
         scale = np.vstack([[scale_a, 0, 0], [0, scale_b, 0], [0, 0, scale_c]])
         
         return scale
@@ -601,7 +601,7 @@ class Lain:
         labels, features = measurements.label(region < tr,
                                               structure = structure)
         labels_with_pbc = self._apply_pbc(labels)
-        return labels_with_pbc, np.unique(labels)     # labels, features
+        return labels_with_pbc, np.unique(labels_with_pbc)     # labels, features
 
 
 
@@ -639,7 +639,10 @@ class Lain:
                 else:
                     connect = np.unique(f2[f1 == s])
                     for c in connect:
-                        labels[labels == c] = s
+                        if c == 0:
+                            continue
+                        else:
+                            labels[labels == c] = s
         return labels
 
 
@@ -663,7 +666,7 @@ class Lain:
         """
 
 
-        if len(features) < 2:
+        if len(features) < 1:
             d = 0
         else:
             ds = []
@@ -726,7 +729,6 @@ class Lain:
 
         """ Find percolation energy and dimensionality of a migration network.
 
-
         Parameters
         ----------
 
@@ -742,6 +744,7 @@ class Lain:
         """
 
         
+
         energies = {}
         for i, dim in enumerate([3, 9, 27]):
             
@@ -771,6 +774,8 @@ class Lain:
         nothing
         
         """
+
+
 
         data = self.data.reshape(self.size)
         voxels = data.shape[1] - 1, data.shape[0] - 1, data.shape[2] - 1
