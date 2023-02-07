@@ -7,4 +7,5 @@ pandas
 numpy
 pymatgen
 networkx
+joblib
 
