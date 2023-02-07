@@ -324,11 +324,14 @@ or os.getcwd() if structure was provided as pymatgen’s object</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="bvlain.Lain.percolation_analysis">
-<span class="sig-name descname"><span class="pre">percolation_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bvlain.Lain.percolation_analysis" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">percolation_analysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">encut</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bvlain.Lain.percolation_analysis" title="Permalink to this definition">#</a></dt>
 <dd><p>Find percolation energy and dimensionality of a migration network.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>encut</strong> (<em>float</em><em>, </em><em>5.0 by default</em>) – cutoff energy above which barriers supposed to be np.inf</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>encut</strong> (<em>float</em><em>, </em><em>5.0 by default</em>) – cutoff energy above which barriers supposed to be np.inf</p></li>
+<li><p><strong>n_jobs</strong> (<em>int</em><em>, </em><em>1 by default</em>) – number of jobs to run for percolation energy search</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>energies</strong> – infromation about percolation {‘E_1D’: float, ‘E_2D’: float, ‘E_3D’: float}</p>
@@ -349,7 +352,7 @@ Note: Works only with ordered structures</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>file</strong> (<em>str</em>) – pathway to CIF or POSCAR</p></li>
-<li><p><strong>check_oxi</strong> (<em>boolean</em><em>, </em><em>False by default</em>) – If true will try to assign oxi states by pymategen’s BVAnalyzer</p></li>
+<li><p><strong>oxi_check</strong> (<em>boolean</em><em>, </em><em>False by default</em>) – If true will try to assign oxi states by pymategen’s BVAnalyzer</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -371,7 +374,7 @@ Note: Works only with ordered structures</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>st</strong> (<em>pymatgen's Structure object</em>) – Should be ordered</p></li>
-<li><p><strong>check_oxi</strong> (<em>boolean</em><em>, </em><em>False by default</em><em>)</em>) – If true will try to assignoxi states by pymategen’s BVAnalyzer</p></li>
+<li><p><strong>oxi_check</strong> (<em>boolean</em><em>, </em><em>False by default</em><em>)</em>) – If true will try to assignoxi states by pymategen’s BVAnalyzer</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
