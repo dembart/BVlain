@@ -12,6 +12,7 @@ import scipy
 import pandas as pd
 import numpy as np
 import networkx as nx
+from joblib import Parallel, delayed
 from ase.geometry import get_distances
 from ase.neighborlist import NeighborList
 from ase.io import read
@@ -22,11 +23,10 @@ from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.io.ase import AseAtomsAdaptor
 from scipy.special import erfc
 from scipy.spatial import cKDTree
-from scipy import ndimage
 from scipy.ndimage import measurements
 
 
-__version__ = "0.1.9.1"
+__version__ = "0.1.9.2"
 
 
 class Lain:
@@ -646,7 +646,7 @@ class Lain:
         return labels
 
 
-    def _percolation_dimension(self, labels, features):
+    def _percolation_dimension_old(self, labels, features):
 
         """ Check percolation dimensionality
 
@@ -678,8 +678,51 @@ class Lain:
                     ds.append(self._cross_boundary(coords, np.array(labels.shape)/3))
             d = max(ds)
         return d
+
+
+
+
+    def _percolation_dimension(self, labels, features):
+
+        """ Check percolation dimensionality
+
+        Parameters
+        ----------
+
+        labels: np.array
+            label from _connected_components method
+            
+        features: np.array
+            label from _connected_components method
+        
+        Returns
+        ----------
+        d: dimensionality of percolation
+            Note: can be from 1 to 27, which is the number of neighboring unit cells within 3x3x3 supercell
+        """
+
+
+        if len(features) < 1:
+            d = 0
+        else:
+            d = max(Parallel(n_jobs=self.n_jobs)(delayed(self._percolation_dimension_parallel)(feature, labels) for feature in features))
+        return d
     
-    
+
+
+
+    def _percolation_dimension_parallel(self, feature, labels):
+
+        if feature == 0:
+            d = 0
+        else:
+            coords = np.argwhere(labels == feature)
+            d = self._cross_boundary(coords, np.array(labels.shape)/3)
+        return d
+
+
+
+
     
     def _percolation_energy(self, dim, encut = 10.0):
 
@@ -724,7 +767,7 @@ class Lain:
 
 
 
-    def percolation_analysis(self, encut = 5.0):
+    def percolation_analysis(self, encut = 5.0, n_jobs = 1):
 
 
         """ Find percolation energy and dimensionality of a migration network.
@@ -734,7 +777,9 @@ class Lain:
 
         encut: float, 5.0 by default
             cutoff energy above which barriers supposed to be np.inf
-        
+
+        n_jobs: int, 1 by default
+            number of jobs to run for percolation energy search
         Returns
         ----------
         
@@ -743,7 +788,7 @@ class Lain:
 
         """
 
-
+        self.n_jobs = n_jobs
 
         energies = {}
         for i, dim in enumerate([3, 9, 27]):

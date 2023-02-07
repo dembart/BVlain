@@ -5,14 +5,16 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
      name='bvlain',  
-     version='0.1.9',
+     version='0.1.9.2',
      py_modules = ["bvlain"],
      install_requires = ["numpy",
                          "pandas",
                          "scipy>=1.7.0",
                          "networkx",
                          "pymatgen>=2022.5.26",
-                         "ase"],
+                         "ase",
+                         "joblib",
+                         ],
      author="Artem Dembitskiy",
      author_email="art.dembitskiy@gmail.com",
      description="The Bond valence site energy calculator",
