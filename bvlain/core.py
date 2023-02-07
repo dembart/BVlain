@@ -705,7 +705,8 @@ class Lain:
         if len(features) < 1:
             d = 0
         else:
-            d = max(Parallel(n_jobs=self.n_jobs)(delayed(self._percolation_dimension_parallel)(feature, labels) for feature in features))
+            d = max(Parallel(n_jobs=self.n_jobs,
+                backend = self.backend)(delayed(self._percolation_dimension_parallel)(feature, labels) for feature in features))
         return d
     
 
@@ -767,7 +768,7 @@ class Lain:
 
 
 
-    def percolation_analysis(self, encut = 5.0, n_jobs = 1):
+    def percolation_analysis(self, encut = 5.0, n_jobs = 1, backend = 'threading'):
 
 
         """ Find percolation energy and dimensionality of a migration network.
@@ -789,6 +790,7 @@ class Lain:
         """
 
         self.n_jobs = n_jobs
+        self.backend = backend
 
         energies = {}
         for i, dim in enumerate([3, 9, 27]):
