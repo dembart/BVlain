@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
      name='bvlain',  
-     version='0.1.9.2',
+     version='0.1.9.4',
      py_modules = ["bvlain"],
      install_requires = ["numpy",
                          "pandas",
@@ -25,6 +25,7 @@ setuptools.setup(
      package_data={"bvlain": ["*.txt", "*.rst", '*.md', "*"], 
      #'tests':['*'], 
      '':['bvlain/data/*.pkl'], 
+     '':['bvlain/data/*.json'], 
      #'pixmaps':['go.png'], 
      #'':['*'], 
      #'': ['go.png']

@@ -4,6 +4,7 @@ Lain - main class of BVlain library.
 
 import re
 import pickle
+import json
 import sys
 import os 
 import ase
@@ -47,6 +48,7 @@ class Lain:
         self.cation_file = os.path.join(self.params_path, 'cation.pkl')
         self.anion_file = os.path.join(self.params_path, 'anion.pkl')
         self.quantum_file = os.path.join(self.params_path, 'quantum_n.pkl')
+        self.radii_file = os.path.join(self.params_path, 'shannon-radii.json')
     
     
     def read_file(self, file, oxi_check = True):
@@ -262,8 +264,197 @@ class Lain:
         self.atoms.set_array('alpha', alpha)
         self.atoms.set_array('d0', d0)
     
+
+
+
+    def _get_ionic_radius(self, symbol, charge, table):
+        """ Get Shannon radius of ion. 
+        Note: radius is averaged over all possible coordination numbers
+
+
+        Parameters
+        ----------
+        symbol: str,
+            atomic symbol, e.g. Li, F
+        charge: int,
+            oxidation state of an ion
+        table: dict,
+            data read from json file shannon-radii.json
+            see: https://github.com/prtkm/ionic-radii
+
+        Returns
+        ----------
+        tuple(atomic_number, oxidation_state)
+
+        """
+
+        d = table[symbol][str(charge)]
+        radii = []
+        for CN in d.keys():
+            radii.append(d[CN]['r_ionic'])
+
+        return np.array(radii).mean()
+
+
+
     
+    def _get_params_voids(self, mobile_ion = None):
+        
+        """ Collect parameters required for the calculations
+
+        Parameters
+        ----------
+        mobile_ion: str,
+            ion, e.g. Li1+, F1-
+        radii_type: str,
+            which type of ion to consider
+            allowed values are "r_ionic", "r_crystal"
+
+        Returns
+        ----------
+        Nothing, but stores data in self
+
+        """
+        #file = '/Users/artemdembitskiy/Desktop/lain_revised/src/src/bvlain/data/shannon-radii.json'
+        file = self.radii_file
+        with open(file) as f:
+            radii_data = f.read()
+        table = json.loads(radii_data)
+
+        self.num_mi, self.q_mi = self._decompose(mobile_ion)
+        self.framework = self.st.copy()
+        self.framework.remove_species([mobile_ion])
+        self.atoms = AseAtomsAdaptor.get_atoms(self.framework)
+        self.cell = self.atoms.cell
+        self.ri_mi = self._get_ionic_radius(self.element_mi, self.q_mi, table)
+        charges = self.atoms.get_array('oxi_states')
+        r_i = [self._get_ionic_radius(s, c, table) for s,c in zip(self.atoms.symbols, charges)]
+        self.atoms.set_array('r_i', np.array(r_i))
+
+
+
+    def _ionic_dist(self, R, r_i):
+        
+        
+        """ Calculate distances between mobile ion and 
+        framework's ions considering them hard spheres
+            Note: radius of a mobile ion is 0
+
+
+        Parameters
+        ----------
+        R: np.array of floats
+            distance between mobile ion and framework ions' centers
+            
+        r_i: np.array of floats
+            ionic radii of framework ions
+            
+        Returns
+        ----------
+        np.array
+            distances between mesh points and framework ions
+            considering their ionic radii
+        """
     
+
+        dists = R - r_i
+        return dists
+
+
+
+    def void_distribution(self, mobile_ion = None, r_cut = 10.0,
+                          resolution = 0.2, k = 2):
+        
+        
+        """ Calculate void space distribution for a given mobile ion.
+        Note: It is a vectorized method. Works fast,
+                but memory expensive.
+                Never ever set resolution parameter lower then 0.1.
+
+
+        Parameters
+        ----------
+
+        mobile_ion: str
+            ion, e.g. 'Li1+', 'F-'
+            
+        resolution: float, 0.2 by default
+            distance between grid points
+            
+        r_cut: float, 10.0 by default
+            maximum distances for neighbor search
+            Note: do not set the parameter < minimum mobile ion to framework distance
+            
+        k: int, 2 by default
+            maximum number of neighbours (used for KDTree search of neighbors)
+            adjusting this number should not effect the final result. used for tests.
+        
+        Returns
+        ----------
+        
+        np.array
+            void distribution
+        """
+        
+        if self.verbose:
+            print('getting void distribution...')
+        
+        self._get_params_voids(mobile_ion)
+        _, distances, ids, numbers =  self._neighbors(r_cut = r_cut,
+                                                     resolution = resolution,
+                                                     k = k)
+        r_i = np.take(self._get_array('r_i'), ids, axis = -1)
+        min_dists = np.nan_to_num(self._ionic_dist(distances, r_i),
+                                copy = False,
+                                nan = 1000.0).min(axis = 1)
+        self.void_dist = np.where(min_dists > 0, min_dists, 0)
+        self.void_data = self.void_dist.reshape(self.size)
+        
+        if self.verbose:
+            print('distribution is ready\n')
+        
+        return self.void_data
+
+
+
+    def _percolation_radius(self, dim):
+
+
+        """ Get percolation radius for a given dimensionality of percolation
+
+        Parameters
+        ----------
+
+        dim: int
+            dimensionality of percolation (from 1 to 27)
+            
+        Returns
+        ----------
+        percolation_radius: float
+            percolation energy or np.inf if no percolation found
+        """
+        
+        data = self.void_data
+        emax = data.max()
+        emin = 0
+        radii = 0
+        while (emax - emin) > 0.1:
+            probe = (emin + emax) / 2
+            labels, features = self._connected_components(data, probe, task = 'void')
+            if len(features) > 0:
+                d = self._percolation_dimension(labels, features)
+                if d >= dim:
+                    emin = probe
+                    radii = round(emin,4)
+                else:
+                    emax = probe
+            else:
+                emax = probe
+        return radii
+
+
+
+
     def _decompose(self, mobile_ion):
 
         """ Decompose input string into chemical element and oxidation state
@@ -302,6 +493,7 @@ class Lain:
         
         self.mi_atom = atomic_numbers[element]
         self.mi_charge = int(oxi_state)
+        self.element_mi = element
         
         return atomic_numbers[element], int(oxi_state)
         
@@ -568,7 +760,7 @@ class Lain:
 
     
 
-    def _connected_components(self, data, tr): 
+    def _connected_components(self, data, tr, task = 'bvse'): 
 
         """ Find connected components
 
@@ -580,7 +772,10 @@ class Lain:
             
         tr: float
             energy threshold to find components
-        
+
+        task: str, either "bvse" or "void"
+            select type of calculation 
+         
         Returns
         ----------
         
@@ -598,8 +793,11 @@ class Lain:
 
         region = superdata - superdata.min()
         structure = scipy.ndimage.generate_binary_structure(3,3)
-        labels, features = measurements.label(region < tr,
-                                              structure = structure)
+        if task == 'bvse':
+            labels, features = measurements.label(region < tr, structure = structure)
+        else:
+            labels, features = measurements.label(region > tr, structure = structure)
+        #labels, features = measurements.label(region < tr, structure = structure)
         labels_with_pbc = self._apply_pbc(labels)
         return labels_with_pbc, np.unique(labels_with_pbc)     # labels, features
 
@@ -768,7 +966,7 @@ class Lain:
 
 
 
-    def percolation_analysis(self, encut = 5.0, n_jobs = 1, backend = 'threading'):
+    def percolation_analysis(self, encut = 10.0, n_jobs = 1, backend = 'threading'):
 
 
         """ Find percolation energy and dimensionality of a migration network.
@@ -800,9 +998,41 @@ class Lain:
 
         return energies
     
+
+
+    def percolation_radii(self, n_jobs = 1, backend = 'threading'):
+
+
+        """ Find the largest percolation radius of the free sphere 
+        w.r.t. the dimensionality of a migration network.
+
+        Parameters
+        ----------
+
+        n_jobs: int, 1 by default
+            number of jobs to run for percolation energy search
+        Returns
+        ----------
+        
+        energies: dict
+            infromation about percolation {'r_1D': float, 'r_2D': float, 'r_3D': float}
+
+        """
+
+        self.n_jobs = n_jobs
+        self.backend = backend
+
+        radii = {}
+        for i, dim in enumerate([3, 9, 27]):
+            
+            r = self._percolation_radius(dim = dim)
+            radii.update({f'r_{i+1}D': r})
+
+        return radii
     
 
-    def grd(self, path = None):
+
+    def grd(self, task = 'bvse', path = None):
         
         """ Write BVSE distribution volumetric file for VESTA 3.0.
             Note: Run it after self.bvse_distribution method
@@ -814,8 +1044,8 @@ class Lain:
             folder where file should be created
             if not provided equals to the folder where structure file was read 
             or os.getcwd() if structure was provided as pymatgen's object
-            
-
+        task: str, "bvse" by default
+            which data to write, allowed values are "void" and "bvse"
         Returns
         ----------
         nothing
@@ -823,8 +1053,10 @@ class Lain:
         """
 
 
-
-        data = self.data.reshape(self.size)
+        if task == 'bvse':
+            data = self.data.reshape(self.size)
+        else:
+            data = self.void_data
         voxels = data.shape[1] - 1, data.shape[0] - 1, data.shape[2] - 1
         cellpars = self.cell.cellpar()
         
@@ -836,10 +1068,10 @@ class Lain:
         else:
             name = os.path.basename(os.path.normpath(self.file)).split('.')[0]
             if path:
-                filename = os.path.join(path, f'lain_{name}.grd')
+                filename = os.path.join(path, f'lain_{task}_{name}.grd')
             else:
                 path = os.path.dirname(os.path.realpath(self.file))
-                filename = os.path.join(path, f'lain_{name}.grd')
+                filename = os.path.join(path, f'lain_{task}_{name}.grd')
 
         with open(filename, 'w+') as report:
 
