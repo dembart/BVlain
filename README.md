@@ -7,7 +7,6 @@ For more details, see [documentation.](https://bvlain.readthedocs.io/en/latest/i
 
 ## Installation
 
-To install bvlain
 ```console
 pip install bvlain
 ```
