@@ -9,7 +9,7 @@ For more details, see [documentation.](https://bvlain.readthedocs.io/en/latest/i
 
 To install bvlain
 ```console
-$ pip install bvlain
+pip install bvlain
 ```
 
 ## Usage example

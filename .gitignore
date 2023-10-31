@@ -5,6 +5,9 @@ __pycache__/
 # C extensions
 *.so
 
+# some files
+tests_debug.ipynb
+
 # Distribution / packaging
 bin/
 build/
