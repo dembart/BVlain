@@ -27,7 +27,7 @@ from scipy.spatial import cKDTree
 from scipy.ndimage import measurements
 
 
-__version__ = "0.1.9.2"
+__version__ = "0.1.9.5"
 
 
 class Lain:
@@ -50,8 +50,9 @@ class Lain:
         self.quantum_file = os.path.join(self.params_path, 'quantum_n.pkl')
         self.radii_file = os.path.join(self.params_path, 'shannon-radii.json')
     
+
     
-    def read_file(self, file, oxi_check = True):
+    def read_file(self, file, oxi_check = True, forbidden_species = ['O-', 'P3-']):
         """ 
         Structure reader. Possible formats are .cif, POSCAR. 
         It is a bit modified pymatgen's function Structure.from_file.
@@ -66,27 +67,66 @@ class Lain:
         oxi_check: boolean, False by default
             If true will try to assign oxi states by pymategen's BVAnalyzer
 
+        forbidden_species: list of str, ['O-', 'P3-'] by default
+            list of forbidden ions to be checked during structure decoration
+            used when oxi_check is True
+
 
         Returns
         ----------
         pymatgen's Structure object
         stores ase.atoms in self
         """
-        
+
         self.st = Structure.from_file(file)
         self.file = file
-        self.from_struct = False
-        self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
-        
         if oxi_check:
-            self.st = BVAnalyzer(forbidden_species = ['O-', 'P3-']).get_oxi_state_decorated_structure(self.st)
-            self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
+            bva = BVAnalyzer(forbidden_species = forbidden_species)
+            self.st = bva.get_oxi_state_decorated_structure(self.st)
+        self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
+        self.from_struct = False
             
         return self.st
     
+
+
+    def read_atoms(self, atoms, oxi_check = True, forbidden_species = ['O-', 'P3-']):
+
+        """
+        Read ase' atoms object
+        Note: Works only with ordered structures
+
+        Parameters
+        ----------
+
+        atoms: ase's Atoms object
+            Should be ordered
+            
+        oxi_check: boolean, False by default)
+            If true will try to assign oxi states by pymategen's BVAnalyzer
+
+        forbidden_species: list of str, ['O-', 'P3-'] by default
+            list of forbidden ions to be checked during structure decoration
+            used when oxi_check is True
+
+        Returns
+        ----------
+        pymatgen's Structure object
+        stores ase.atoms in self
+
+        """
+        self.st = AseAtomsAdaptor.get_structure(atoms)
+        if oxi_check:
+            bva = BVAnalyzer(forbidden_species = forbidden_species)
+            self.st = bva.get_oxi_state_decorated_structure(self.st)
+        self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
+        self.from_struct = True
+
+            
+        return self.st
+
     
-    
-    def read_structure(self, st, oxi_check = True):
+    def read_structure(self, st, oxi_check = True, forbidden_species = ['O-', 'P3-']):
         """
         Read structure from pymatgen's Structure.
         Note: Works only with ordered structures
@@ -98,8 +138,11 @@ class Lain:
             Should be ordered
             
         oxi_check: boolean, False by default)
-            If true will try to assignoxi states by pymategen's BVAnalyzer
+            If true will try to assign oxi states by pymategen's BVAnalyzer
 
+        forbidden_species: list of str, ['O-', 'P3-'] by default
+            list of forbidden ions to be checked during structure decoration
+            used when oxi_check is True
 
         Returns
         ----------
@@ -109,10 +152,12 @@ class Lain:
         """
         
         self.st = st
+        if oxi_check:
+            bva = BVAnalyzer(forbidden_species = forbidden_species)
+            self.st = bva.get_oxi_state_decorated_structure(self.st)
         self.from_struct = True
         self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
-        if oxi_check:
-            self.st = BVAnalyzer().get_oxi_state_decorated_structure(self.st)
+
             
         return self.st
             
@@ -207,9 +252,11 @@ class Lain:
             quantum_number = pickle.load(f) 
             
         self.num_mi, self.q_mi = self._decompose(mobile_ion)
-        self.framework = self.st.copy()
-        self.framework.remove_species([mobile_ion])
-        self.atoms = AseAtomsAdaptor.get_atoms(self.framework)
+        #self.framework = self.st.copy()
+        #self.framework.remove_species([mobile_ion])
+        self.framework = self.atoms_copy.copy()[self.atoms_copy.numbers != self.num_mi]
+        #self.atoms = AseAtomsAdaptor.get_atoms(self.framework)
+        self.atoms = self.framework
         self.cell = self.atoms.cell
         self.n_mi = quantum_number[self.num_mi]
         self.rc_mi = covalent_radii[self.num_mi]
@@ -306,16 +353,12 @@ class Lain:
         ----------
         mobile_ion: str,
             ion, e.g. Li1+, F1-
-        radii_type: str,
-            which type of ion to consider
-            allowed values are "r_ionic", "r_crystal"
 
         Returns
         ----------
         Nothing, but stores data in self
 
         """
-        #file = '/Users/artemdembitskiy/Desktop/lain_revised/src/src/bvlain/data/shannon-radii.json'
         file = self.radii_file
         with open(file) as f:
             radii_data = f.read()
@@ -506,12 +549,10 @@ class Lain:
 
         """
         
-        
         sites = self.cell.cartesian_positions(mesh)
         self.sites = sites
         
         return sites
-        
         
         
         
@@ -624,7 +665,7 @@ class Lain:
             covalent radii of framework ions
             
         nx: np.array of floats
-            principle quantum numbers of framwork ions
+            principle quantum numbers of framework ions
             
         f: float, 0.74 by default
             screening factor
@@ -748,10 +789,9 @@ class Lain:
 
         probe = coords[0, :]
         cell_location = np.floor(probe / data_shape)
-        #print(cell_location)
-        translations = np.array(list(itertools.product([0, 1, 2],
-                                                       [0, 1, 2],
-                                                       [0, 1, 2])))
+        translations = np.array(list(itertools.product([0, 1],
+                                                       [0, 1],
+                                                       [0, 1])))
         translations = translations - cell_location
         test = probe + translations * data_shape
         d = np.argwhere(abs(coords[:, None] - test).sum(axis = 2) == 0).shape[0]
@@ -783,7 +823,7 @@ class Lain:
             labels are data points colored to features values
         """
 
-        n = 3
+        n = 2
         lx, ly, lz = data.shape
         superdata = np.zeros((n * lx, n * ly, n * lz))
         for i in range(n):
@@ -797,7 +837,6 @@ class Lain:
             labels, features = measurements.label(region < tr, structure = structure)
         else:
             labels, features = measurements.label(region > tr, structure = structure)
-        #labels, features = measurements.label(region < tr, structure = structure)
         labels_with_pbc = self._apply_pbc(labels)
         return labels_with_pbc, np.unique(labels_with_pbc)     # labels, features
 
@@ -844,9 +883,12 @@ class Lain:
         return labels
 
 
+
     def _percolation_dimension_old(self, labels, features):
 
         """ Check percolation dimensionality
+
+        Old version.  Does not work here but used for tests with elder version.
 
         Parameters
         ----------
@@ -862,7 +904,6 @@ class Lain:
         d: dimensionality of percolation
             Note: can be from 1 to 27, which is the number of neighboring unit cells within 3x3x3 supercell
         """
-
 
         if len(features) < 1:
             d = 0
@@ -899,7 +940,6 @@ class Lain:
             Note: can be from 1 to 27, which is the number of neighboring unit cells within 3x3x3 supercell
         """
 
-
         if len(features) < 1:
             d = 0
         else:
@@ -909,17 +949,14 @@ class Lain:
     
 
 
-
     def _percolation_dimension_parallel(self, feature, labels):
 
         if feature == 0:
             d = 0
         else:
             coords = np.argwhere(labels == feature)
-            d = self._cross_boundary(coords, np.array(labels.shape)/3)
+            d = self._cross_boundary(coords, np.array(labels.shape)/2)
         return d
-
-
 
 
     
@@ -932,7 +969,7 @@ class Lain:
         ----------
 
         dim: int
-            dimensionality of percolation (from 1 to 27)
+            dimensionality of percolation. 2 -> 1D, 4 -> 2D, 8 - 3D percolation
             
         encut: float, 10.0 by default
             stop criterion for the search of percolation energy
@@ -991,7 +1028,7 @@ class Lain:
         self.backend = backend
 
         energies = {}
-        for i, dim in enumerate([3, 9, 27]):
+        for i, dim in enumerate([2, 4, 8]):
             
             energy = self._percolation_energy(encut = encut, dim = dim)
             energies.update({f'E_{i+1}D': energy})
@@ -1023,7 +1060,7 @@ class Lain:
         self.backend = backend
 
         radii = {}
-        for i, dim in enumerate([3, 9, 27]):
+        for i, dim in enumerate([2, 4, 8]):
             
             r = self._percolation_radius(dim = dim)
             radii.update({f'r_{i+1}D': r})
@@ -1032,7 +1069,7 @@ class Lain:
     
 
 
-    def grd(self, task = 'bvse', path = None):
+    def grd(self, path = None, task = 'bvse'):
         
         """ Write BVSE distribution volumetric file for VESTA 3.0.
             Note: Run it after self.bvse_distribution method
@@ -1040,7 +1077,7 @@ class Lain:
         Parameters
         ----------
 
-        path_to_output: str or None (default)
+        path: str or None (default)
             folder where file should be created
             if not provided equals to the folder where structure file was read 
             or os.getcwd() if structure was provided as pymatgen's object
@@ -1064,7 +1101,6 @@ class Lain:
             name = ''
             if not path:
                 path = os.getcwd()
-            
         else:
             name = os.path.basename(os.path.normpath(self.file)).split('.')[0]
             if path:
@@ -1074,11 +1110,9 @@ class Lain:
                 filename = os.path.join(path, f'lain_{task}_{name}.grd')
 
         with open(filename, 'w+') as report:
-
             report.write(name + '\n')
             report.write(''.join(str(p) + ' ' for p in cellpars).strip() + '\n')
             report.write(''.join(str(v) + ' ' for v in voxels).strip() + '\n')
-
             for i in range(voxels[0]):
                 for j in range(voxels[1]):
                     for k in range(voxels[2]):
@@ -1141,15 +1175,13 @@ class Lain:
             else:
                 return energy, cart_coords, distances
         except (nx.NodeNotFound, nx.NetworkXNoPath):
-            return False
-        
+            return False    
     
     
     
     def energy_profile(self, source, target, encut = 5.0, pbc = False, max_jump_dist = 12.0):
 
         """ Construct energy profile between source and target.
-
 
         Parameters
         ----------
