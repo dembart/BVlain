@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
      name='bvlain',  
-     version='0.1.9.4',
+     version='0.1.9.5',
      py_modules = ["bvlain"],
      install_requires = ["numpy",
                          "pandas",
