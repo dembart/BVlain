@@ -16,7 +16,7 @@ import networkx as nx
 from joblib import Parallel, delayed
 from ase.geometry import get_distances
 from ase.neighborlist import NeighborList
-from ase.io import read
+from ase.io import read, cube
 from ase.build import make_supercell
 from ase.data import atomic_numbers, covalent_radii
 from pymatgen.core import Structure
@@ -27,7 +27,7 @@ from scipy.spatial import cKDTree
 from scipy.ndimage import measurements
 
 
-__version__ = "0.1.9.5"
+__version__ = "0.2"
 
 
 class Lain:
@@ -115,14 +115,13 @@ class Lain:
         stores ase.atoms in self
 
         """
+
         self.st = AseAtomsAdaptor.get_structure(atoms)
         if oxi_check:
             bva = BVAnalyzer(forbidden_species = forbidden_species)
             self.st = bva.get_oxi_state_decorated_structure(self.st)
         self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
         self.from_struct = True
-
-            
         return self.st
 
     
@@ -179,7 +178,8 @@ class Lain:
         shift: array [x, y, z]
             Used when invoked from self.bvse_distribution function
 
-        Returns
+        Returns np.array
+            meshgrid
         ----------
         Nothing, but stores mesh_, shift, size attributes in self
         """
@@ -189,11 +189,13 @@ class Lain:
         x = np.linspace(0, 1, nx) + shift[0]
         y = np.linspace(0, 1, ny) + shift[1]
         z = np.linspace(0, 1, nz) + shift[2]
-        mesh_ = np.meshgrid(x, y, z)
-        mesh_ = np.vstack(mesh_).reshape(3, -1).T
+        mesh_ = np.stack(np.meshgrid(x, y, z, indexing='ij'), axis=-1).reshape(-1, 3)
+        #mesh_ = np.meshgrid(x, y, z)
+        #mesh_ = np.vstack(mesh_).reshape(3, -1).T
         self.mesh_ = mesh_
         self.shift = shift
-        self.size = [ny, nx, nz] # order changed due to reshaping
+        #self.size = [ny, nx, nz] # order changed due to reshaping
+        self.size = [nx, ny, nz]
         
         return mesh_
     
@@ -438,6 +440,10 @@ class Lain:
         np.array
             void distribution
         """
+
+        if resolution < 0.1:
+            resolution = 0.1
+        self.resolution = resolution
         
         if self.verbose:
             print('getting void distribution...')
@@ -599,10 +605,7 @@ class Lain:
         distances, indexes = KDTree.query(sites,
                                           workers=-1,
                                           k=k,
-                                          distance_upper_bound = r_cut)
-        if self.verbose:
-            print('\tneighbors found')
-            
+                                          distance_upper_bound = r_cut)            
         return sites, distances, indexes, supercell.numbers
         
 
@@ -637,8 +640,6 @@ class Lain:
         np.array
             Morse-type interaction energies
         """
-        
-        
         energy = D0 * ((np.exp( alpha * (R_min - R) ) - 1) ** 2 - 1)
         return energy / 2
     
@@ -650,7 +651,6 @@ class Lain:
         """ Calculate Coulombic interaction energy.
             Note: interaction is calculate between ions 
                   of same sign as mobile ion
-
 
         Parameters
         ----------
@@ -676,13 +676,10 @@ class Lain:
         np.array
             Coulombic interaction energies
         """
-    
         q2 = self.q_mi
         n_mi = self.n_mi
         rc_mi = self.rc_mi
         energy = 14.4 * (q1 * q2 / (nx * n_mi) ** (1/2)) * (1 / (R)) * erfc(R / (f * (R_c + rc_mi)))
-        
-        
         return energy
     
     
@@ -732,8 +729,11 @@ class Lain:
         np.array
             BVSE distribution
         """
-        
-        
+        if resolution < 0.1:
+            resolution = 0.1
+        self.k = k
+        self.r_cut = r_cut
+        self.resolution = resolution
         if self.verbose:
             print('getting BVSE distribution...')
         
@@ -1016,6 +1016,8 @@ class Lain:
 
         n_jobs: int, 1 by default
             number of jobs to run for percolation energy search
+        backend: str, 'threading' by default
+            see joblib's documentations for more details
         Returns
         ----------
         
@@ -1055,7 +1057,6 @@ class Lain:
             infromation about percolation {'r_1D': float, 'r_2D': float, 'r_3D': float}
 
         """
-
         self.n_jobs = n_jobs
         self.backend = backend
 
@@ -1068,19 +1069,17 @@ class Lain:
         return radii
     
 
+    def write_cube(self, filename, task = 'bvse'):
 
-    def grd(self, path = None, task = 'bvse'):
-        
-        """ Write BVSE distribution volumetric file for VESTA 3.0.
-            Note: Run it after self.bvse_distribution method
+        """ Write .cube file containing structural and BVSE data.
+
+            Note: Run it after self.bvse_distribution(**kwargs) method
 
         Parameters
         ----------
 
-        path: str or None (default)
-            folder where file should be created
-            if not provided equals to the folder where structure file was read 
-            or os.getcwd() if structure was provided as pymatgen's object
+        filename: str
+            file name to write .cube
         task: str, "bvse" by default
             which data to write, allowed values are "void" and "bvse"
         Returns
@@ -1088,44 +1087,56 @@ class Lain:
         nothing
         
         """
+        if task == 'bvse':
+            data = self.data
+        else:
+            data = self.void_data
+        nx, ny, nz = data.shape
+        with open(f'{filename}.cube', 'w') as f:
+            cube.write_cube(f, self.atoms_copy, data = data[:nx-1, :ny-1, :nz-1])
+    
 
 
+    def write_grd(self, filename, task = 'bvse'):
+        
+        """ Write BVSE distribution volumetric file for VESTA 3.0.
+            Note: Run it after self.bvse_distribution method
+
+        Parameters
+        ----------
+
+        filename: str
+            file name to write .cube
+        task: str, "bvse" by default
+            which data to write, allowed values are "void" and "bvse"
+        Returns
+        ----------
+        nothing
+        
+        """
         if task == 'bvse':
             data = self.data.reshape(self.size)
         else:
             data = self.void_data
-        voxels = data.shape[1] - 1, data.shape[0] - 1, data.shape[2] - 1
+        voxels = data.shape[0] - 1, data.shape[1] - 1, data.shape[2] - 1
         cellpars = self.cell.cellpar()
-        
-        if self.from_struct:
-            name = ''
-            if not path:
-                path = os.getcwd()
-        else:
-            name = os.path.basename(os.path.normpath(self.file)).split('.')[0]
-            if path:
-                filename = os.path.join(path, f'lain_{task}_{name}.grd')
-            else:
-                path = os.path.dirname(os.path.realpath(self.file))
-                filename = os.path.join(path, f'lain_{task}_{name}.grd')
-
-        with open(filename, 'w+') as report:
-            report.write(name + '\n')
+        with open(f'{filename}.grd' , 'w') as report:
+            comment = '# BVSE data made with bvlain package: https://github.com/dembart/BVlain'
+            report.write(comment + '\n')
             report.write(''.join(str(p) + ' ' for p in cellpars).strip() + '\n')
             report.write(''.join(str(v) + ' ' for v in voxels).strip() + '\n')
             for i in range(voxels[0]):
                 for j in range(voxels[1]):
                     for k in range(voxels[2]):
-                        val = data[j, i, k]
+                        val = data[i, j, k]
                         report.write(str(val) + '\n')
-        if self.verbose:
-            print(f'File was written to {filename}\n')
         
             
             
     def _shortest_path(self, source, target, tr, pbc = False, max_jump_dist = 12.0):
 
-        """ Find shortest path between source and target 
+        """
+        Find shortest path between source and target 
 
         Parameters
         ----------
@@ -1146,14 +1157,11 @@ class Lain:
         nothing
         
         """
-
-
-        
         sites = self.mesh_ - self.shift
         data = self.distribution
         tree = cKDTree(sites[data < tr ,:])
         dists, ids = tree.query([source, target], k = 1)
-        data_ = data.reshape(self.size) # check it, was b a c
+        data_ = data.reshape(self.size)
         cs = np.argwhere(data_ < tr)
         if pbc:
             kdt = cKDTree(cs, boxsize = data_.shape)
@@ -1170,7 +1178,7 @@ class Lain:
             disps = cart_coords[:-1,:] - cart_coords[1:, :]
             distances = np.hstack([[0], np.cumsum(np.sqrt(np.square(disps).sum(axis = 1)))])
             if distances[-1] > max_jump_dist:
-                print('wtf', distances[-1], max_jump_dist)
+                print('something is wrong', distances[-1], max_jump_dist)
                 return False
             else:
                 return energy, cart_coords, distances
@@ -1181,7 +1189,8 @@ class Lain:
     
     def energy_profile(self, source, target, encut = 5.0, pbc = False, max_jump_dist = 12.0):
 
-        """ Construct energy profile between source and target.
+        """
+        Construct energy profile between source and target.
 
         Parameters
         ----------
@@ -1203,7 +1212,6 @@ class Lain:
             energy, cartesian coordinates and cumulative distance of the energy profile
 
         """
-
         emin = self.data.min()
         emax = emin + encut
         while (emax - emin) > 0.01:
@@ -1213,7 +1221,6 @@ class Lain:
                 emax = probe
             else:
                 emin = probe
-                
         return self._shortest_path(source, target, tr = emax, pbc = pbc)     
 
     
@@ -1252,10 +1259,7 @@ class Lain:
         ----------
         cartesian coordinates of interpolated pathway
         """
-
-
         energy, coords, dists = self.energy_profile(source, target, encut, pbc)
-
         steps = np.linspace(0, dists.max(), images + 2)
         delta = (abs(dists[:, None] - steps)).min(axis = 1)
         delta.sort()
@@ -1287,14 +1291,14 @@ class Lain:
         
         if self.verbose:
             print(f'Files were written to {path_new}\n')
-            
         return pathway
 
     
     
     def mismatch(self, r_cut = 3.0):
         
-        """ Calculate bond valence sum mismatch for each site.
+        """
+        Calculate bond valence sum mismatch for each site.
 
 
         Parameters
@@ -1308,8 +1312,6 @@ class Lain:
         pd.DataFrame
             structure data and misamtches
         """
-
-
         with open(self.cation_file, 'rb') as f:
             data_cation = pickle.load(f) 
 
@@ -1321,6 +1323,7 @@ class Lain:
 
 
         mismatch = []
+        bvs_list = []
         for i, n in enumerate(atoms.numbers):
 
             ids = np.argwhere(centers == i).ravel()
@@ -1346,15 +1349,16 @@ class Lain:
                     r0[index] = data_anion[n][q1][n_env[index]][q2[index]]['r0']
                 bvs = np.exp(alpha * (r0 - r)) * q1q2
 
+            bvs_list.append(bvs.sum())
             pos = np.round(atoms.get_scaled_positions(), 4)
-            mismatch.append(abs(bvs.sum() - abs(q1)))
+            mismatch.append(bvs.sum() - abs(q1))
 
         df = pd.DataFrame(pos, columns = ['x/a', 'y/b', 'z/c'])
         df['mismatch'] = mismatch
         df['atom'] = atoms.get_chemical_symbols()
         df['formal_charge'] = atoms.get_array('oxi_states')
-
-        return df[['atom', 'x/a', 'y/b', 'z/c', 'formal_charge', 'mismatch']]
+        df['bvs'] = bvs_list
+        return df[['atom', 'x/a', 'y/b', 'z/c', 'formal_charge', 'bvs', 'mismatch']]
 
     
     
