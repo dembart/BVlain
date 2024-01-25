@@ -10,7 +10,7 @@
    "id": "6811da0e",
    "metadata": {},
    "source": [
-    "# Theory behid\n",
+    "## Theory behind\n",
     "\n",
     "The program is based on the theory developed by S. Adams and co-authors (see references)\n",
     "\n",
