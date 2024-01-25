@@ -1,11 +1,11 @@
-#### Installation
+## Installation
 
 
 ```python
 !pip install bvlain
 ```
 
-### Examples
+## Examples
 
 ##### Percolation barriers
 

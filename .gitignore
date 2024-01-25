@@ -6,9 +6,10 @@ __pycache__/
 *.so
 
 # some files
-tests_debug.ipynb
+test_debug.ipynb
+test_debug_copy.ipynb
 README_old.md
-tests_debug.md
+test_debug.md
 
 # Distribution / packaging
 bin/
