@@ -23,7 +23,7 @@ params = {'mobile_ion': 'Li1+',
 		  'k': 100
 }
 _ = calc.bvse_distribution(**params)
-energies = calc.percolation_analysis(encut = 5.0)
+energies = calc.percolation_barriers(encut = 5.0)
 ```
 The output is threshold energies for 1-3D percolation 
 

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
      name='bvlain',  
-     version='0.2',
+     version='0.24',
      py_modules = ["bvlain"],
      install_requires = ["numpy",
                          "pandas",
@@ -14,6 +14,7 @@ setuptools.setup(
                          "pymatgen>=2022.5.26",
                          "ase",
                          "joblib",
+			 "ions"
                          ],
      author="Artem Dembitskiy",
      author_email="art.dembitskiy@gmail.com",

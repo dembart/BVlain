@@ -1,6 +1,4 @@
-"""
-Lain - main class of BVlain library.
-"""
+""" Lain - main class of BVlain library. """
 
 import re
 import pickle
@@ -25,9 +23,11 @@ from pymatgen.io.ase import AseAtomsAdaptor
 from scipy.special import erfc
 from scipy.spatial import cKDTree
 from scipy.ndimage import measurements
+from ions import Decorator
+from bvlain.potentials import BVSEPotential
 
 
-__version__ = "0.2"
+__version__ = "0.21"
 
 
 class Lain:
@@ -74,19 +74,20 @@ class Lain:
 
         Returns
         ----------
-        pymatgen's Structure object
-        stores ase.atoms in self
+        ase's Atoms object
+        stores ase.atoms in self.atoms_copy
         """
 
-        self.st = Structure.from_file(file)
-        self.file = file
+
         if oxi_check:
-            bva = BVAnalyzer(forbidden_species = forbidden_species)
-            self.st = bva.get_oxi_state_decorated_structure(self.st)
-        self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
-        self.from_struct = False
-            
-        return self.st
+            self.atoms_copy = read(file)
+            calc = Decorator(forbidden_species = forbidden_species)
+            atoms = calc.decorate(self.atoms_copy)
+        else:
+            st = Structure.from_file(file)
+            atoms = AseAtomsAdaptor.get_atoms(st)
+            self.atoms_copy = atoms.copy()
+        return self.atoms_copy
     
 
 
@@ -111,21 +112,21 @@ class Lain:
 
         Returns
         ----------
-        pymatgen's Structure object
-        stores ase.atoms in self
+        ase's Atoms object
+        stores ase.atoms in self.atoms_copy
 
         """
 
-        self.st = AseAtomsAdaptor.get_structure(atoms)
+        self.atoms_copy = atoms.copy()
         if oxi_check:
-            bva = BVAnalyzer(forbidden_species = forbidden_species)
-            self.st = bva.get_oxi_state_decorated_structure(self.st)
-        self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
-        self.from_struct = True
-        return self.st
+            calc = Decorator()
+            atoms = calc.decorate(self.atoms_copy, forbidden_species = forbidden_species)
+        return self.atoms_copy
 
     
+
     def read_structure(self, st, oxi_check = True, forbidden_species = ['O-', 'P3-']):
+
         """
         Read structure from pymatgen's Structure.
         Note: Works only with ordered structures
@@ -146,7 +147,7 @@ class Lain:
         Returns
         ----------
         pymatgen's Structure object
-        stores ase.atoms in self
+        stores ase.atoms in self.atoms_copy
 
         """
         
@@ -154,10 +155,7 @@ class Lain:
         if oxi_check:
             bva = BVAnalyzer(forbidden_species = forbidden_species)
             self.st = bva.get_oxi_state_decorated_structure(self.st)
-        self.from_struct = True
         self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
-
-            
         return self.st
             
         
@@ -166,7 +164,6 @@ class Lain:
         
         """ This method creates grid of equidistant points in 3D
             with respect to the input resolution. 
-
 
         Parameters
         ----------
@@ -183,29 +180,22 @@ class Lain:
         ----------
         Nothing, but stores mesh_, shift, size attributes in self
         """
-    
+
         a, b, c, _, _, _ = self.cell.cellpar()
         nx, ny, nz = int(a // resolution), int(b // resolution), int(c // resolution)
         x = np.linspace(0, 1, nx) + shift[0]
         y = np.linspace(0, 1, ny) + shift[1]
         z = np.linspace(0, 1, nz) + shift[2]
         mesh_ = np.stack(np.meshgrid(x, y, z, indexing='ij'), axis=-1).reshape(-1, 3)
-        #mesh_ = np.meshgrid(x, y, z)
-        #mesh_ = np.vstack(mesh_).reshape(3, -1).T
         self.mesh_ = mesh_
         self.shift = shift
-        #self.size = [ny, nx, nz] # order changed due to reshaping
         self.size = [nx, ny, nz]
-        
         return mesh_
     
     
     
-    
     def _scale_cell(self, cell, r_cut):
-        
         """ Scaling of the unit cell for the search of neighbors
-
 
         Parameters
         ----------
@@ -222,14 +212,12 @@ class Lain:
             Matrix of the unit cell transformation
         
         """
-        
         # a, b, c, angle(b,c), angle(a,c), angle(a,b)
         a, b, c, alpha, beta, gamma = cell.cellpar(radians = True) 
         scale_a = 2*np.ceil(r_cut/min(a*np.sin(gamma), a*np.sin(beta))) + 1
         scale_b = 2*np.ceil(r_cut/min(b*np.sin(gamma), b*np.sin(beta))) + 1
         scale_c = 2*np.ceil(r_cut/min(c*np.sin(beta), c*np.sin(beta))) + 1
         scale = np.vstack([[scale_a, 0, 0], [0, scale_b, 0], [0, 0, scale_c]])
-        
         return scale
     
     
@@ -254,10 +242,7 @@ class Lain:
             quantum_number = pickle.load(f) 
             
         self.num_mi, self.q_mi = self._decompose(mobile_ion)
-        #self.framework = self.st.copy()
-        #self.framework.remove_species([mobile_ion])
         self.framework = self.atoms_copy.copy()[self.atoms_copy.numbers != self.num_mi]
-        #self.atoms = AseAtomsAdaptor.get_atoms(self.framework)
         self.atoms = self.framework
         self.cell = self.atoms.cell
         self.n_mi = quantum_number[self.num_mi]
@@ -312,7 +297,6 @@ class Lain:
         self.atoms.set_array('r_min', r_min)
         self.atoms.set_array('alpha', alpha)
         self.atoms.set_array('d0', d0)
-    
 
 
 
@@ -341,9 +325,7 @@ class Lain:
         radii = []
         for CN in d.keys():
             radii.append(d[CN]['r_ionic'])
-
         return np.array(radii).mean()
-
 
 
     
@@ -367,19 +349,17 @@ class Lain:
         table = json.loads(radii_data)
 
         self.num_mi, self.q_mi = self._decompose(mobile_ion)
-        self.framework = self.st.copy()
-        self.framework.remove_species([mobile_ion])
-        self.atoms = AseAtomsAdaptor.get_atoms(self.framework)
+        self.framework = self.atoms_copy.copy()[self.atoms_copy.numbers != self.num_mi]
+        self.atoms = self.framework
         self.cell = self.atoms.cell
         self.ri_mi = self._get_ionic_radius(self.element_mi, self.q_mi, table)
-        charges = self.atoms.get_array('oxi_states')
+        charges = np.array(self.atoms.get_array('oxi_states'), dtype = int)
         r_i = [self._get_ionic_radius(s, c, table) for s,c in zip(self.atoms.symbols, charges)]
         self.atoms.set_array('r_i', np.array(r_i))
 
 
 
     def _ionic_dist(self, R, r_i):
-        
         
         """ Calculate distances between mobile ion and 
         framework's ions considering them hard spheres
@@ -400,7 +380,6 @@ class Lain:
             distances between mesh points and framework ions
             considering their ionic radii
         """
-    
 
         dists = R - r_i
         return dists
@@ -408,8 +387,7 @@ class Lain:
 
 
     def void_distribution(self, mobile_ion = None, r_cut = 10.0,
-                          resolution = 0.2, k = 2):
-        
+                          resolution = 0.2, k = 2, ionic = True):
         
         """ Calculate void space distribution for a given mobile ion.
         Note: It is a vectorized method. Works fast,
@@ -452,11 +430,15 @@ class Lain:
         _, distances, ids, numbers =  self._neighbors(r_cut = r_cut,
                                                      resolution = resolution,
                                                      k = k)
-        r_i = np.take(self._get_array('r_i'), ids, axis = -1)
+        if ionic:
+            r_i = np.take(self._get_array('r_i'), ids, axis = -1)
+        else:
+            r_i = np.zeros(ids.shape)
         min_dists = np.nan_to_num(self._ionic_dist(distances, r_i),
                                 copy = False,
                                 nan = 1000.0).min(axis = 1)
-        self.void_dist = np.where(min_dists > 0, min_dists, 0)
+        #self.void_dist = np.where(min_dists > 0, min_dists, 0)
+        self.void_dist = min_dists
         self.void_data = self.void_dist.reshape(self.size)
         
         if self.verbose:
@@ -467,7 +449,6 @@ class Lain:
 
 
     def _percolation_radius(self, dim):
-
 
         """ Get percolation radius for a given dimensionality of percolation
 
@@ -483,7 +464,7 @@ class Lain:
             percolation energy or np.inf if no percolation found
         """
         
-        data = self.void_data
+        data = np.where(self.void_data > 0, self.void_data, 0)
         emax = data.max()
         emin = 0
         radii = 0
@@ -503,11 +484,9 @@ class Lain:
 
 
 
-
     def _decompose(self, mobile_ion):
 
         """ Decompose input string into chemical element and oxidation state
-
 
         Parameters
         ----------
@@ -543,27 +522,21 @@ class Lain:
         self.mi_atom = atomic_numbers[element]
         self.mi_charge = int(oxi_state)
         self.element_mi = element
-        
         return atomic_numbers[element], int(oxi_state)
-        
         
         
     
     def _cartesian_sites(self, mesh):
         
-        """ Helper function
-
-        """
+        """ Helper function"""
         
         sites = self.cell.cartesian_positions(mesh)
         self.sites = sites
-        
         return sites
         
         
         
     def _neighbors(self, r_cut = 10.0, resolution = 0.1, k = 100): # modify considering kdtree bug!
-        
         
         """ Search of the neighbors using scipy's cKDTree
         Parameters
@@ -607,100 +580,19 @@ class Lain:
                                           k=k,
                                           distance_upper_bound = r_cut)            
         return sites, distances, indexes, supercell.numbers
-        
+    
+    
 
-        
-        
-        
-    def _Morse(self, R, R_min, D0, alpha):
-        
-        """ Calculate Morse-type interaction energy.
-            Note: interaction is calculate between ions 
-                  of opposite sign compared to mobile ion
-
-
-        Parameters
-        ----------
- 
-        R: np.array of floats
-            distance between mobile ion and framework
-            
-        R_min: np.array of floats
-            minimum energy distance between mobile and framework ions
-            
-        D0: np.array of floats
-            bond breaking parameter
-            
-        alpha: np.array of floats
-            inverse BVS tabulated parameter b (alpha = 1 / b)
-        
-        Returns
-        ----------
-        
-        np.array
-            Morse-type interaction energies
-        """
-        energy = D0 * ((np.exp( alpha * (R_min - R) ) - 1) ** 2 - 1)
-        return energy / 2
-    
-    
-    
-    def _Coulomb(self, q1, R, R_c, nx, f = 0.74):
-        
-        
-        """ Calculate Coulombic interaction energy.
-            Note: interaction is calculate between ions 
-                  of same sign as mobile ion
-
-        Parameters
-        ----------
-
-        q1: np.array of floats
-            formal charges of framework ions
-            
-        R: np.array of floats
-            distance between mobile ion and framework
-            
-        R_c: np.array of floats
-            covalent radii of framework ions
-            
-        nx: np.array of floats
-            principle quantum numbers of framework ions
-            
-        f: float, 0.74 by default
-            screening factor
-        
-        Returns
-        ----------
-        
-        np.array
-            Coulombic interaction energies
-        """
-        q2 = self.q_mi
-        n_mi = self.n_mi
-        rc_mi = self.rc_mi
-        energy = 14.4 * (q1 * q2 / (nx * n_mi) ** (1/2)) * (1 / (R)) * erfc(R / (f * (R_c + rc_mi)))
-        return energy
-    
-    
-    
-    
     def _get_array(self, name):
-        
-        """ Helper function
-
-        """
-        
+        """ Helper function"""
         arr = self.supercell.get_array(name)
         arr = np.concatenate([arr, [np.nan]]) # np.nan is added to deal with kDTree upper bound
         return arr
     
     
     
-    
     def bvse_distribution(self, mobile_ion = None, r_cut = 10,
                           resolution = 0.2, k = 100):
-        
         
         """ Calculate BVSE distribution for a given mobile ion.
         Note: It is a vectorized method. Works fast,
@@ -749,12 +641,16 @@ class Lain:
         q = np.where(q * self.q_mi > 0, q, 0)
         n = np.take(self._get_array('n'), ids, axis = -1)
         
-        morse = np.nan_to_num(self._Morse(distances, r_min, d0, alpha),
+        morse = np.nan_to_num(BVSEPotential.Morse(distances, r_min, d0, alpha),
                               copy = False,
                               nan = 0.0).sum(axis = 1)
-        coulomb = np.nan_to_num(self._Coulomb(q, distances, r_c, n),
-                                copy = False,
-                                nan = 0.0).sum(axis = 1)
+        
+        coulomb = np.nan_to_num(BVSEPotential.Coulomb(distances,
+                                                      self.q_mi, q,
+                                                      self.rc_mi, r_c,
+                                                      self.n_mi, n),
+                                 copy = False,
+                                 nan = 0.0).sum(axis = 1)
         energy = morse + coulomb
         self.distribution = energy
         self.data = energy.reshape(self.size)
@@ -766,7 +662,6 @@ class Lain:
     
     
     def _cross_boundary(self, coords, data_shape):
-
         
         """ Check if connected component crosses the boundary of unit cell
 
@@ -795,7 +690,6 @@ class Lain:
         translations = translations - cell_location
         test = probe + translations * data_shape
         d = np.argwhere(abs(coords[:, None] - test).sum(axis = 2) == 0).shape[0]
-
         return d
 
     
@@ -845,7 +739,6 @@ class Lain:
     def _apply_pbc(self, labels):
         
         """ Apply periodic boundary conditions to the NxMxL np.array of labeled points.
-
 
         Parameters
         ----------
@@ -937,7 +830,7 @@ class Lain:
         Returns
         ----------
         d: dimensionality of percolation
-            Note: can be from 1 to 27, which is the number of neighboring unit cells within 3x3x3 supercell
+            Note: can be from 2 to 8, which is the number of neighboring unit cells within 3x3x3 supercell
         """
 
         if len(features) < 1:
@@ -961,7 +854,6 @@ class Lain:
 
     
     def _percolation_energy(self, dim, encut = 10.0):
-
 
         """ Get percolation energy fofr a given dimensionality of percolation
 
@@ -1004,7 +896,12 @@ class Lain:
 
 
     def percolation_analysis(self, encut = 10.0, n_jobs = 1, backend = 'threading'):
+        print('Please use percolation_barriers instead, percolation_analysis is deprecated')
+        raise
 
+
+
+    def percolation_barriers(self, encut = 10.0, n_jobs = 1, backend = 'threading'):
 
         """ Find percolation energy and dimensionality of a migration network.
 
@@ -1016,8 +913,10 @@ class Lain:
 
         n_jobs: int, 1 by default
             number of jobs to run for percolation energy search
+
         backend: str, 'threading' by default
             see joblib's documentations for more details
+
         Returns
         ----------
         
@@ -1041,7 +940,6 @@ class Lain:
 
     def percolation_radii(self, n_jobs = 1, backend = 'threading'):
 
-
         """ Find the largest percolation radius of the free sphere 
         w.r.t. the dimensionality of a migration network.
 
@@ -1050,6 +948,10 @@ class Lain:
 
         n_jobs: int, 1 by default
             number of jobs to run for percolation energy search
+
+        backend: str, 'threading' by default
+            see joblib's documentations for more details
+
         Returns
         ----------
         
@@ -1130,176 +1032,13 @@ class Lain:
                     for k in range(voxels[2]):
                         val = data[i, j, k]
                         report.write(str(val) + '\n')
-        
-            
-            
-    def _shortest_path(self, source, target, tr, pbc = False, max_jump_dist = 12.0):
-
-        """
-        Find shortest path between source and target 
-
-        Parameters
-        ----------
-
-        source: list
-            fractional coordinate [x1, y1, z1]
-        target: list
-            fractional coordinate [x2, y2, z2]
-        tr: float
-            energy threshold to find the pathway
-        pbc: boolean, False by default
-            consider or not pbc conditions
-        max_jump_dist: float, 12.0 by default
-            maximum allowed distance of the ion jump in Angstroms
-
-        Returns
-        ----------
-        nothing
-        
-        """
-        sites = self.mesh_ - self.shift
-        data = self.distribution
-        tree = cKDTree(sites[data < tr ,:])
-        dists, ids = tree.query([source, target], k = 1)
-        data_ = data.reshape(self.size)
-        cs = np.argwhere(data_ < tr)
-        if pbc:
-            kdt = cKDTree(cs, boxsize = data_.shape)
-        else:
-            kdt = cKDTree(cs)
-        edges = kdt.query_pairs(2**(1/2))
-        # create graph
-        G = nx.from_edgelist(edges)
-        try:
-            mask = nx.bidirectional_shortest_path(G,  ids[0], ids[1]) 
-            energy = data[(np.nonzero(data < tr))][mask]
-            coords = sites[(np.nonzero(data < tr))][mask]
-            cart_coords = self.cell.cartesian_positions(coords)
-            disps = cart_coords[:-1,:] - cart_coords[1:, :]
-            distances = np.hstack([[0], np.cumsum(np.sqrt(np.square(disps).sum(axis = 1)))])
-            if distances[-1] > max_jump_dist:
-                print('something is wrong', distances[-1], max_jump_dist)
-                return False
-            else:
-                return energy, cart_coords, distances
-        except (nx.NodeNotFound, nx.NetworkXNoPath):
-            return False    
     
-    
-    
-    def energy_profile(self, source, target, encut = 5.0, pbc = False, max_jump_dist = 12.0):
 
-        """
-        Construct energy profile between source and target.
-
-        Parameters
-        ----------
-        source: list
-            fractional coordinate [x1, y1, z1]
-        target: list
-            fractional coordinate [x2, y2, z2]
-        encut: float
-            Energy (in eV) above which barrier supposed to be np.inf
-        pbc: boolean, False by default
-            Consider or not pbc conditions
-        max_jump_dist: float
-            Maximum allowed distance of the ion jump in Angstroms
-
-
-        Returns
-        ----------
-        energy, coords, dist: np.array
-            energy, cartesian coordinates and cumulative distance of the energy profile
-
-        """
-        emin = self.data.min()
-        emax = emin + encut
-        while (emax - emin) > 0.01:
-            probe = (emin + emax) / 2
-            if self._shortest_path(source, target, tr = probe,
-                                  pbc = pbc, max_jump_dist = max_jump_dist):
-                emax = probe
-            else:
-                emin = probe
-        return self._shortest_path(source, target, tr = emax, pbc = pbc)     
-
-    
-    
-    
-    def NEB(self, source, target, images=5, path='', encut=5.0, pbc=False, max_jump_dist=12.0):
-        
-        """ Create POSCAR files for DFT-NEB calculations in VASP.
-        Tracer ion migration trajectory.
-
-
-        Parameters
-        ----------
-
-        source: list or np.array
-            list of fractional coordinates [x1, y1, z1]
-            
-        target: list or np.array
-            fractional coordinate [x2, y2, z2]
-            
-        encut: float
-            energy (in eV) above which barrier supposed to be np.inf
-            
-        pbc: boolean, False by default
-            consider or not pbc conditions
-            
-        max_jump_dist: float, 12.0 by default
-            maximum allowed distance of the ion jump in Angstroms
-            
-        images: int, 5 by default
-            number of intermediate images 
-        
-        path: str
-            path to output folder
-        Returns
-        ----------
-        cartesian coordinates of interpolated pathway
-        """
-        energy, coords, dists = self.energy_profile(source, target, encut, pbc)
-        steps = np.linspace(0, dists.max(), images + 2)
-        delta = (abs(dists[:, None] - steps)).min(axis = 1)
-        delta.sort()
-        pathway = coords[np.argwhere((abs(dists[:, None] - steps)).min(axis = 1) <= delta[images+1])[:,0]]
-        tree = cKDTree(self.atoms_copy.get_positions())
-        source, target = self.cell.cartesian_positions([source, target])
-        dists, indexes = tree.query([source, target], k = 1)
-        source, target = self.atoms_copy.positions[indexes]
-        pathway[0, :] = source
-        pathway[-1, :] = target
-        atoms = self.atoms_copy.copy()    
-        del atoms[indexes]
-
-        for i in range(pathway.shape[0]):
-            atoms.append(self.num_mi)
-            atoms.positions[-1] = pathway[i,:]
-            path_new = os.path.join(os.path.join(path, 'NEB_input'), f'{i}'.zfill(2))
-            os.makedirs(path_new, exist_ok = True)
-            filename = os.path.join(path_new, 'POSCAR')
-            ase.io.write(filename, atoms, format = 'vasp')
-            del atoms[-1]
-
-        for i in range(pathway.shape[0]):
-            atoms.append(self.num_mi)
-            atoms.positions[-1] = pathway[i,:]
-        folder = os.path.join(path, 'NEB_input')
-        filename = os.path.join(folder, 'Interpolated_trajectory.cif')
-        ase.io.write(filename, atoms, format = 'cif')
-        
-        if self.verbose:
-            print(f'Files were written to {path_new}\n')
-        return pathway
-
-    
     
     def mismatch(self, r_cut = 3.0):
         
         """
         Calculate bond valence sum mismatch for each site.
-
 
         Parameters
         ----------

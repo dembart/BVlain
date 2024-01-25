@@ -7,6 +7,8 @@ __pycache__/
 
 # some files
 tests_debug.ipynb
+README_old.md
+tests_debug.md
 
 # Distribution / packaging
 bin/
