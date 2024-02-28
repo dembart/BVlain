@@ -592,7 +592,7 @@ class Lain:
     
     
     def bvse_distribution(self, mobile_ion = None, r_cut = 10,
-                          resolution = 0.2, k = 100):
+                          resolution = 0.2, k = 100, f = 0.74):
         
         """ Calculate BVSE distribution for a given mobile ion.
         Note: It is a vectorized method. Works fast,
@@ -648,7 +648,7 @@ class Lain:
         coulomb = np.nan_to_num(BVSEPotential.Coulomb(distances,
                                                       self.q_mi, q,
                                                       self.rc_mi, r_c,
-                                                      self.n_mi, n),
+                                                      self.n_mi, n, f = f),
                                  copy = False,
                                  nan = 0.0).sum(axis = 1)
         energy = morse + coulomb
