@@ -42,7 +42,7 @@ class Lain:
     """   
 
     def __init__(self, verbose = True):
-    
+
         self.verbose = verbose
         self.params_path = self._resource_path('data')
         self.cation_file = os.path.join(self.params_path, 'cation.pkl')
@@ -119,8 +119,7 @@ class Lain:
 
         self.atoms_copy = atoms.copy()
         if oxi_check:
-            calc = Decorator()
-            atoms = calc.decorate(self.atoms_copy, forbidden_species = forbidden_species)
+            atoms = Decorator(forbidden_species = forbidden_species).decorate(self.atoms_copy)
         return self.atoms_copy
 
     
