@@ -7,4 +7,3 @@ numpy
 pymatgen
 scipy
 joblib
-

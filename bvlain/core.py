@@ -36,9 +36,7 @@ class Lain:
     """   
 
     def __init__(self, verbose = True):
-
-        print('dev version')
-
+        
         self.verbose = verbose
         self.params_path = self._resource_path('data')
         self.cation_file = os.path.join(self.params_path, 'cation.pkl')
