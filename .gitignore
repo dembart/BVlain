@@ -1,15 +1,16 @@
+# some files
+test_debug.ipynb
+test_debug_copy.ipynb
+README_old.md
+test_debug.md
+theory.png
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 
 # C extensions
 *.so
-
-# some files
-test_debug.ipynb
-test_debug_copy.ipynb
-README_old.md
-test_debug.md
 
 # Distribution / packaging
 bin/
@@ -26,7 +27,7 @@ var/
 .installed.cfg
 *.egg
 
-theory.png
+
 
 # Installer logs
 pip-log.txt

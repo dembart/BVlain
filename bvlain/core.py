@@ -5,29 +5,23 @@ import pickle
 import json
 import sys
 import os 
-import ase
 import itertools
-import scipy
-import pandas as pd
 import numpy as np
-import networkx as nx
 from joblib import Parallel, delayed
-from ase.geometry import get_distances
-from ase.neighborlist import NeighborList
+from scipy.special import erfc
+from scipy.spatial import cKDTree
+from scipy.ndimage import measurements, generate_binary_structure
+from ase.neighborlist import neighbor_list
 from ase.io import read, cube
 from ase.build import make_supercell
 from ase.data import atomic_numbers, covalent_radii
 from pymatgen.core import Structure
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.io.ase import AseAtomsAdaptor
-from scipy.special import erfc
-from scipy.spatial import cKDTree
-from scipy.ndimage import measurements
-from ions import Decorator
-from bvlain.potentials import BVSEPotential
+from .potentials import BVSEPotential
 
 
-__version__ = "0.21"
+__version__ = "0.24.3"
 
 
 class Lain:
@@ -43,6 +37,8 @@ class Lain:
 
     def __init__(self, verbose = True):
 
+        print('dev version')
+
         self.verbose = verbose
         self.params_path = self._resource_path('data')
         self.cation_file = os.path.join(self.params_path, 'cation.pkl')
@@ -51,44 +47,40 @@ class Lain:
         self.radii_file = os.path.join(self.params_path, 'shannon-radii.json')
     
 
-    
-    def read_file(self, file, oxi_check = True, forbidden_species = ['O-', 'P3-']):
-        """ 
-        Structure reader. Possible formats are .cif, POSCAR. 
-        It is a bit modified pymatgen's function Structure.from_file.
+
+    def read_structure(self, st, oxi_check = True, forbidden_species = ['O-', 'P3-']):
+
+        """
+        Read structure from pymatgen's Structure.
         Note: Works only with ordered structures
 
         Parameters
         ----------
 
-        file: str
-            pathway to CIF or POSCAR
+        st: pymatgen's Structure object
+            Should be ordered
             
-        oxi_check: boolean, False by default
+        oxi_check: boolean, False by default)
             If true will try to assign oxi states by pymategen's BVAnalyzer
 
         forbidden_species: list of str, ['O-', 'P3-'] by default
             list of forbidden ions to be checked during structure decoration
             used when oxi_check is True
 
-
         Returns
-        ----------
-        ase's Atoms object
+        -------
+        pymatgen's Structure object
         stores ase.atoms in self.atoms_copy
+
         """
-
-
+        
+        self.st = st
         if oxi_check:
-            self.atoms_copy = read(file)
-            calc = Decorator(forbidden_species = forbidden_species)
-            atoms = calc.decorate(self.atoms_copy)
-        else:
-            st = Structure.from_file(file)
-            atoms = AseAtomsAdaptor.get_atoms(st)
-            self.atoms_copy = atoms.copy()
-        return self.atoms_copy
-    
+            bva = BVAnalyzer(forbidden_species = forbidden_species)
+            self.st = bva.get_oxi_state_decorated_structure(self.st)
+        self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
+        return self.st
+
 
 
     def read_atoms(self, atoms, oxi_check = True, forbidden_species = ['O-', 'P3-']):
@@ -111,58 +103,53 @@ class Lain:
             used when oxi_check is True
 
         Returns
-        ----------
+        -------
         ase's Atoms object
         stores ase.atoms in self.atoms_copy
 
         """
-
-        self.atoms_copy = atoms.copy()
-        if oxi_check:
-            atoms = Decorator(forbidden_species = forbidden_species).decorate(self.atoms_copy)
+        st = AseAtomsAdaptor().get_structure(atoms)
+        self.read_structure(st, oxi_check=oxi_check, forbidden_species=forbidden_species)
         return self.atoms_copy
-
     
 
-    def read_structure(self, st, oxi_check = True, forbidden_species = ['O-', 'P3-']):
 
-        """
-        Read structure from pymatgen's Structure.
+    def read_file(self, file, oxi_check = True, forbidden_species = ['O-', 'P3-']):
+        """ 
+        Structure reader. Possible formats are .cif, POSCAR. 
+        It is a bit modified pymatgen's function Structure.from_file.
         Note: Works only with ordered structures
 
         Parameters
         ----------
 
-        st: pymatgen's Structure object
-            Should be ordered
+        file: str
+            pathway to CIF or POSCAR
             
-        oxi_check: boolean, False by default)
+        oxi_check: boolean, False by default
             If true will try to assign oxi states by pymategen's BVAnalyzer
 
         forbidden_species: list of str, ['O-', 'P3-'] by default
             list of forbidden ions to be checked during structure decoration
             used when oxi_check is True
 
-        Returns
-        ----------
-        pymatgen's Structure object
-        stores ase.atoms in self.atoms_copy
 
+        Returns
+        -------
+        ase's Atoms object
+        stores ase.atoms in self.atoms_copy
         """
-        
-        self.st = st
-        if oxi_check:
-            bva = BVAnalyzer(forbidden_species = forbidden_species)
-            self.st = bva.get_oxi_state_decorated_structure(self.st)
-        self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
-        return self.st
-            
-        
+
+        atoms = read(file)
+        return self.read_atoms(atoms, oxi_check=oxi_check, forbidden_species=forbidden_species)
+
+
         
     def _mesh(self, resolution = 0.1, shift = [0, 0, 0]):
         
-        """ This method creates grid of equidistant points in 3D
-            with respect to the input resolution. 
+        """ 
+        This method creates grid of equidistant points in 3D
+        with respect to the input resolution. 
 
         Parameters
         ----------
@@ -174,10 +161,11 @@ class Lain:
         shift: array [x, y, z]
             Used when invoked from self.bvse_distribution function
 
-        Returns np.array
+        Returns
+        -------
+        mesh_: np.array
             meshgrid
-        ----------
-        Nothing, but stores mesh_, shift, size attributes in self
+        
         """
 
         a, b, c, _, _, _ = self.cell.cellpar()
@@ -194,7 +182,9 @@ class Lain:
     
     
     def _scale_cell(self, cell, r_cut):
-        """ Scaling of the unit cell for the search of neighbors
+        """ 
+        
+        Scaling of the unit cell for the search of neighbors
 
         Parameters
         ----------
@@ -206,7 +196,7 @@ class Lain:
             Unit cell parameters
 
         Returns
-        ----------
+        -------
         scale: np.array (3, 3)
             Matrix of the unit cell transformation
         
@@ -223,17 +213,14 @@ class Lain:
     
     def _get_params(self, mobile_ion = None):
         
-        """ Collect parameters required for the calculations
+        """ 
+        
+        Collect parameters required for the calculations
 
         Parameters
         ----------
         mobile_ion: str,
             ion, e.g. Li1+, F1-
-
-
-        Returns
-        ----------
-        Nothing, but stores data in self
 
         """
 
@@ -300,7 +287,8 @@ class Lain:
 
 
     def _get_ionic_radius(self, symbol, charge, table):
-        """ Get Shannon radius of ion. 
+        """ 
+        Get Shannon radius of ion. 
         Note: radius is averaged over all possible coordination numbers
 
 
@@ -316,7 +304,8 @@ class Lain:
 
         Returns
         ----------
-        tuple(atomic_number, oxidation_state)
+        radii: float
+            average ionic radii for the provided ion
 
         """
 
@@ -330,16 +319,13 @@ class Lain:
     
     def _get_params_voids(self, mobile_ion = None):
         
-        """ Collect parameters required for the calculations
+        """
+        Collect parameters required for the calculations
 
         Parameters
         ----------
         mobile_ion: str,
             ion, e.g. Li1+, F1-
-
-        Returns
-        ----------
-        Nothing, but stores data in self
 
         """
         file = self.radii_file
@@ -375,7 +361,7 @@ class Lain:
             
         Returns
         ----------
-        np.array
+        dists: np.array
             distances between mesh points and framework ions
             considering their ionic radii
         """
@@ -388,10 +374,10 @@ class Lain:
     def void_distribution(self, mobile_ion = None, r_cut = 10.0,
                           resolution = 0.2, k = 2, ionic = True):
         
-        """ Calculate void space distribution for a given mobile ion.
-        Note: It is a vectorized method. Works fast,
-                but memory expensive.
-                Never ever set resolution parameter lower then 0.1.
+        """ 
+        Calculate void space distribution for a given mobile ion.
+        Note! It is a vectorized method. Works fast, but memory expensive.
+        Never ever set resolution parameter lower then 0.05.
 
 
         Parameters
@@ -414,7 +400,7 @@ class Lain:
         Returns
         ----------
         
-        np.array
+        void_data: np.array
             void distribution
         """
 
@@ -537,7 +523,8 @@ class Lain:
         
     def _neighbors(self, r_cut = 10.0, resolution = 0.1, k = 100): # modify considering kdtree bug!
         
-        """ Search of the neighbors using scipy's cKDTree
+        """ 
+        Search of the neighbors using scipy's cKDTree
         Parameters
         ----------
  
@@ -555,7 +542,6 @@ class Lain:
         
         tuple of neigbors parameters
             
-
         """
         
         if self.verbose:
@@ -593,10 +579,10 @@ class Lain:
     def bvse_distribution(self, mobile_ion = None, r_cut = 10,
                           resolution = 0.2, k = 100, f = 0.74):
         
-        """ Calculate BVSE distribution for a given mobile ion.
-        Note: It is a vectorized method. Works fast,
-                but memory expensive.
-                Never ever set resolution parameter lower then 0.1.
+        """ 
+        Calculate BVSE distribution for a given mobile ion.
+        Note! It is a vectorized method. Works fast, but memory expensive.
+        Never ever set resolution parameter lower then 0.05.
 
 
         Parameters
@@ -617,7 +603,7 @@ class Lain:
         Returns
         ----------
         
-        np.array
+        bvse_data: np.array
             BVSE distribution
         """
         if resolution < 0.1:
@@ -653,16 +639,16 @@ class Lain:
         energy = morse + coulomb
         self.distribution = energy
         self.data = energy.reshape(self.size)
-        
         if self.verbose:
             print('distribution is ready\n')
-        
         return self.data
     
+
     
     def _cross_boundary(self, coords, data_shape):
         
-        """ Check if connected component crosses the boundary of unit cell
+        """ 
+        Check if connected component crosses the boundary of unit cell
 
         Parameters
         ----------
@@ -680,7 +666,6 @@ class Lain:
             number of unit cells within a supercell that contains connected component
         """
 
-
         probe = coords[0, :]
         cell_location = np.floor(probe / data_shape)
         translations = np.array(list(itertools.product([0, 1],
@@ -695,7 +680,8 @@ class Lain:
 
     def _connected_components(self, data, tr, task = 'bvse'): 
 
-        """ Find connected components
+        """ 
+        Find connected components
 
         Parameters
         ----------
@@ -725,7 +711,7 @@ class Lain:
                     superdata[i*lx:(i+1)*lx, j*ly:(j+1)*ly, k*lz:(k+1)*lz] = data
 
         region = superdata - superdata.min()
-        structure = scipy.ndimage.generate_binary_structure(3,3)
+        structure = generate_binary_structure(3,3)
         if task == 'bvse':
             labels, features = measurements.label(region < tr, structure = structure)
         else:
@@ -737,7 +723,8 @@ class Lain:
 
     def _apply_pbc(self, labels):
         
-        """ Apply periodic boundary conditions to the NxMxL np.array of labeled points.
+        """ 
+        Apply periodic boundary conditions to the NxMxL np.array of labeled points.
 
         Parameters
         ----------
@@ -778,7 +765,8 @@ class Lain:
 
     def _percolation_dimension_old(self, labels, features):
 
-        """ Check percolation dimensionality
+        """ 
+        Check percolation dimensionality
 
         Old version.  Does not work here but used for tests with elder version.
 
@@ -812,10 +800,10 @@ class Lain:
 
 
 
-
     def _percolation_dimension(self, labels, features):
 
-        """ Check percolation dimensionality
+        """
+        Check percolation dimensionality
 
         Parameters
         ----------
@@ -854,7 +842,8 @@ class Lain:
     
     def _percolation_energy(self, dim, encut = 10.0):
 
-        """ Get percolation energy fofr a given dimensionality of percolation
+        """
+        Get percolation energy fofr a given dimensionality of percolation
 
         Parameters
         ----------
@@ -902,7 +891,8 @@ class Lain:
 
     def percolation_barriers(self, encut = 10.0, n_jobs = 1, backend = 'threading'):
 
-        """ Find percolation energy and dimensionality of a migration network.
+        """
+        Find percolation energy and dimensionality of a migration network.
 
         Parameters
         ----------
@@ -939,7 +929,8 @@ class Lain:
 
     def percolation_radii(self, n_jobs = 1, backend = 'threading'):
 
-        """ Find the largest percolation radius of the free sphere 
+        """
+        Find the largest percolation radius of the free sphere 
         w.r.t. the dimensionality of a migration network.
 
         Parameters
@@ -970,11 +961,12 @@ class Lain:
         return radii
     
 
+
     def write_cube(self, filename, task = 'bvse'):
 
-        """ Write .cube file containing structural and BVSE data.
-
-            Note: Run it after self.bvse_distribution(**kwargs) method
+        """
+        Write .cube file containing structural and BVSE data.
+        Note! Run it after self.bvse_distribution method
 
         Parameters
         ----------
@@ -983,11 +975,8 @@ class Lain:
             file name to write .cube
         task: str, "bvse" by default
             which data to write, allowed values are "void" and "bvse"
-        Returns
-        ----------
-        nothing
-        
         """
+
         if task == 'bvse':
             data = self.data
         else:
@@ -1000,21 +989,19 @@ class Lain:
 
     def write_grd(self, filename, task = 'bvse'):
         
-        """ Write BVSE distribution volumetric file for VESTA 3.0.
-            Note: Run it after self.bvse_distribution method
+        """
+        Write BVSE distribution volumetric file for VESTA 3.0.
+        Note! Run it after self.bvse_distribution method
 
         Parameters
         ----------
 
         filename: str
-            file name to write .cube
+            file name to write .grd
         task: str, "bvse" by default
             which data to write, allowed values are "void" and "bvse"
-        Returns
-        ----------
-        nothing
-        
         """
+
         if task == 'bvse':
             data = self.data.reshape(self.size)
         else:
@@ -1050,6 +1037,7 @@ class Lain:
         pd.DataFrame
             structure data and misamtches
         """
+
         with open(self.cation_file, 'rb') as f:
             data_cation = pickle.load(f) 
 
@@ -1057,7 +1045,7 @@ class Lain:
             data_anion = pickle.load(f)
 
         atoms = self.atoms_copy
-        centers, neighbors, distances = ase.neighborlist.neighbor_list('ijd', atoms, r_cut)
+        centers, neighbors, distances = neighbor_list('ijd', atoms, r_cut)
 
 
         mismatch = []
