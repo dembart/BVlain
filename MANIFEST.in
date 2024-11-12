@@ -1,9 +1,4 @@
 include LICENSE
 include README.md
-#include *.txt
 include bvlain/data/*.pkl
 include bvlain/data/*.json
-#include src/Logo.ico
-#include src/pixmaps/*png
-#recursive-include *txt
-#recursive-include *png

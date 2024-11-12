@@ -1,10 +1,10 @@
 """ Lain - main class of BVlain library. """
 
-import re
-import pickle
-import json
-import sys
 import os 
+import re
+import sys
+import json
+import pickle
 import itertools
 import numpy as np
 from joblib import Parallel, delayed
@@ -21,7 +21,7 @@ from pymatgen.io.ase import AseAtomsAdaptor
 from .potentials import BVSEPotential
 
 
-__version__ = "0.24.3"
+__version__ = "0.24.5"
 
 
 class Lain:
@@ -36,7 +36,7 @@ class Lain:
     """   
 
     def __init__(self, verbose = True):
-        
+
         self.verbose = verbose
         self.params_path = self._resource_path('data')
         self.cation_file = os.path.join(self.params_path, 'cation.pkl')
