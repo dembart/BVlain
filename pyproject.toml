@@ -33,3 +33,6 @@ doc = [
 packages = [
     { include = "bvlain" },
 ]
+
+[project.scripts]
+lain = "bvlain.cli:main"

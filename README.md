@@ -1,6 +1,6 @@
 ![BVlain_logo](BVlain_logo.png)
 
-BVlain is the module for bond valence site energy calculations and is about to solve tasks related to ionic conductivity of a tracer ion in a crystal structure.
+BVlain is a python library for bond valence site energy calculations. The functionality includes calculation of the 1-3D percolation barrier and radius of a mobile ion (e.g. Li+), calculation of the bond valence sum mismatch, writing of volumetric data files (.grd or .cube) for visualization of a mobile ion diffusion map. 
 
 For more details, see [documentation.](https://bvlain.readthedocs.io/en/latest/index.html)
 
@@ -9,7 +9,7 @@ For more details, see [documentation.](https://bvlain.readthedocs.io/en/latest/i
 
 
 ```python
-!pip install bvlain
+pip install bvlain
 ```
 
 ## Examples

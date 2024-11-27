@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
      name='bvlain',  
-     version='0.24.5',
+     version='0.24.6',
      py_modules = ["bvlain"],
      install_requires = ["numpy",
                          "pandas",
@@ -36,6 +36,11 @@ setuptools.setup(
      ],
     include_package_data=True,
     packages=setuptools.find_packages(),
+#    entry_points={
+#        'console_scripts': [
+#            'lain=bvlain.cli:main',
+#        ],
+#    },
  )
 
 

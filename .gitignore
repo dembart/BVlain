@@ -1,9 +1,18 @@
 # some files
 test_debug.ipynb
 test_debug_copy.ipynb
+test_mace_mp.ipynb
 README_old.md
 test_debug.md
 theory.png
+*cif
+*csv
+#lesson/figures
+lesson
+#lesson/files/*.grd
+#lesson/*.md
+bvlain/cli.py
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -7,6 +7,7 @@ import json
 import pickle
 import itertools
 import numpy as np
+import pandas as pd
 from joblib import Parallel, delayed
 from scipy.special import erfc
 from scipy.spatial import cKDTree
@@ -77,6 +78,7 @@ class Lain:
             bva = BVAnalyzer(forbidden_species = forbidden_species)
             self.st = bva.get_oxi_state_decorated_structure(self.st)
         self.atoms_copy = AseAtomsAdaptor.get_atoms(self.st)
+        self.cell = self.atoms_copy.cell
         return self.st
 
 
@@ -228,7 +230,6 @@ class Lain:
         self.num_mi, self.q_mi = self._decompose(mobile_ion)
         self.framework = self.atoms_copy.copy()[self.atoms_copy.numbers != self.num_mi]
         self.atoms = self.framework
-        self.cell = self.atoms.cell
         self.n_mi = quantum_number[self.num_mi]
         self.rc_mi = covalent_radii[self.num_mi]
         self.atoms.set_array('r_c', np.array([covalent_radii[num] for num in self.atoms.numbers]))
@@ -402,8 +403,6 @@ class Lain:
             void distribution
         """
 
-        if resolution < 0.1:
-            resolution = 0.1
         self.resolution = resolution
         
         if self.verbose:
@@ -604,8 +603,6 @@ class Lain:
         bvse_data: np.array
             BVSE distribution
         """
-        if resolution < 0.1:
-            resolution = 0.1
         self.k = k
         self.r_cut = r_cut
         self.resolution = resolution
@@ -878,12 +875,6 @@ class Lain:
             else:
                 emin = probe
         return barrier
-
-
-
-    def percolation_analysis(self, encut = 10.0, n_jobs = 1, backend = 'threading'):
-        print('Please use percolation_barriers instead, percolation_analysis is deprecated')
-        raise
 
 
 
