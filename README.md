@@ -22,7 +22,7 @@ from bvlain import Lain
 
 file = '/Users/artemdembitskiy/Downloads/LiFePO4.cif'
 calc = Lain(verbose = False)
-st = calc.read_file(file)
+atoms = calc.read_file(file)       # alternatively, you can use read_atoms() or read_structure()
 
 params = {'mobile_ion': 'Li1+',    # mobile specie
 		  'r_cut': 10.0,           # cutoff for interaction between the mobile species and framework
@@ -40,6 +40,28 @@ for key in energies.keys():
     3D percolation barrier is 3.3594 eV
 
 
+
+##### Save volumetric data for visualization (.grd or .cube)
+
+
+```python
+from bvlain import Lain
+
+file = '/Users/artemdembitskiy/Downloads/LiFePO4.cif'
+calc = Lain(verbose = False)
+atoms = calc.read_file(file)
+
+params = {'mobile_ion': 'Li1+',    # mobile specie
+		  'r_cut': 10.0,           # cutoff for interaction between the mobile species and framework
+		  'resolution': 0.2,	   # distance between the grid points
+		  'k': 100                 # maximum number of neighbors to be collected for each point
+}
+_ = calc.bvse_distribution(**params)
+
+calc.write_grd(file + '_bvse', task = 'bvse')  # saves .grd file
+# calc.write_cube(file + '_bvse', task = 'bvse') # alternatively, save .cube file
+```
+
 ##### Percolation radii
 
 
@@ -48,7 +70,7 @@ from bvlain import Lain
 
 file = '/Users/artemdembitskiy/Downloads/LiFePO4.cif'
 calc = Lain(verbose = False)
-st = calc.read_file(file)
+atoms = calc.read_file(file)
 
 params = {'mobile_ion': 'Li1+',    # mobile specie
 		  'r_cut': 10.0,           # cutoff for interaction between the mobile species and framework
@@ -64,27 +86,8 @@ for key in radii.keys():
     2D percolation barrier is 0.2957 angstrom
     3D percolation barrier is 0.1972 angstrom
 
-
-##### Save volumetric data for visualization (.grd or .cube)
-
-
 ```python
-from bvlain import Lain
-
-file = '/Users/artemdembitskiy/Downloads/LiFePO4.cif'
-calc = Lain(verbose = False)
-st = calc.read_file(file)
-
-params = {'mobile_ion': 'Li1+',    # mobile specie
-		  'r_cut': 10.0,           # cutoff for interaction between the mobile species and framework
-		  'resolution': 0.2,	   # distance between the grid points
-		  'k': 100                 # maximum number of neighbors to be collected for each point
-}
-_ = calc.bvse_distribution(**params)
-_ = calc.void_distribution(**params)
-
-calc.write_grd(file + '_bvse', task = 'bvse')  # saves .grd file
-calc.write_cube(file + '_void', task = 'void') # save .cube file
+calc.write_grd(file + '_void', task = 'void') # # save void distribution
 ```
 
 ##### Bond valence sum mismatch
@@ -95,7 +98,7 @@ from bvlain import Lain
 
 file = '/Users/artemdembitskiy/Downloads/LiFePO4.cif'
 calc = Lain(verbose = False)
-st = calc.read_file(file)
+atoms = calc.read_file(file)
 dataframe = calc.mismatch(r_cut = 3.5)
 ```
 

@@ -9,20 +9,16 @@ import itertools
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
-from scipy.special import erfc
 from scipy.spatial import cKDTree
 from scipy.ndimage import measurements, generate_binary_structure
 from ase.neighborlist import neighbor_list
 from ase.io import read, cube
 from ase.build import make_supercell
 from ase.data import atomic_numbers, covalent_radii
-from pymatgen.core import Structure
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.io.ase import AseAtomsAdaptor
 from .potentials import BVSEPotential
 
-
-__version__ = "0.24.5"
 
 
 class Lain:
@@ -316,7 +312,7 @@ class Lain:
 
 
     
-    def _get_params_voids(self, mobile_ion = None):
+    def _get_params_voids(self, mobile_ion = None, ionic = True):
         
         """
         Collect parameters required for the calculations
@@ -335,11 +331,11 @@ class Lain:
         self.num_mi, self.q_mi = self._decompose(mobile_ion)
         self.framework = self.atoms_copy.copy()[self.atoms_copy.numbers != self.num_mi]
         self.atoms = self.framework
-        self.cell = self.atoms.cell
-        self.ri_mi = self._get_ionic_radius(self.element_mi, self.q_mi, table)
-        charges = np.array(self.atoms.get_array('oxi_states'), dtype = int)
-        r_i = [self._get_ionic_radius(s, c, table) for s,c in zip(self.atoms.symbols, charges)]
-        self.atoms.set_array('r_i', np.array(r_i))
+        if ionic:
+            self.ri_mi = self._get_ionic_radius(self.element_mi, self.q_mi, table)
+            charges = np.array(self.atoms.get_array('oxi_states'), dtype = int)
+            r_i = [self._get_ionic_radius(s, c, table) for s,c in zip(self.atoms.symbols, charges)]
+            self.atoms.set_array('r_i', np.array(r_i))
 
 
 
@@ -408,7 +404,7 @@ class Lain:
         if self.verbose:
             print('getting void distribution...')
         
-        self._get_params_voids(mobile_ion)
+        self._get_params_voids(mobile_ion, ionic = ionic)
         _, distances, ids, numbers =  self._neighbors(r_cut = r_cut,
                                                      resolution = resolution,
                                                      k = k)
