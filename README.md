@@ -4,6 +4,10 @@ BVlain is a python library for bond valence site energy calculations. The functi
 
 For more details, see [documentation.](https://bvlain.readthedocs.io/en/latest/index.html)
 
+![License](https://img.shields.io/github/license/dembart/bvlain?color=fbf2fe)
+![PyPI Downloads](https://img.shields.io/pypi/dm/BVlain?color=57328a)
+
+
 
 ## Installation
 
@@ -20,7 +24,7 @@ pip install bvlain
 ```python
 from bvlain import Lain
 
-file = '/Users/artemdembitskiy/Downloads/LiFePO4.cif'
+file = './Downloads/LiFePO4.cif'
 calc = Lain(verbose = False)
 atoms = calc.read_file(file)       # alternatively, you can use read_atoms() or read_structure()
 
@@ -47,7 +51,7 @@ for key in energies.keys():
 ```python
 from bvlain import Lain
 
-file = '/Users/artemdembitskiy/Downloads/LiFePO4.cif'
+file = './Downloads/LiFePO4.cif'
 calc = Lain(verbose = False)
 atoms = calc.read_file(file)
 
@@ -68,7 +72,7 @@ calc.write_grd(file + '_bvse', task = 'bvse')  # saves .grd file
 ```python
 from bvlain import Lain
 
-file = '/Users/artemdembitskiy/Downloads/LiFePO4.cif'
+file = './Downloads/LiFePO4.cif'
 calc = Lain(verbose = False)
 atoms = calc.read_file(file)
 
@@ -96,7 +100,7 @@ calc.write_grd(file + '_void', task = 'void') # # save void distribution
 ```python
 from bvlain import Lain
 
-file = '/Users/artemdembitskiy/Downloads/LiFePO4.cif'
+file = './Downloads/LiFePO4.cif'
 calc = Lain(verbose = False)
 atoms = calc.read_file(file)
 dataframe = calc.mismatch(r_cut = 3.5)
