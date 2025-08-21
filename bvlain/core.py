@@ -14,7 +14,7 @@ from scipy.ndimage import measurements, generate_binary_structure
 from ase.neighborlist import neighbor_list
 from ase.io import read, cube
 from ase.build import make_supercell
-from ase.data import atomic_numbers, covalent_radii
+from ase.data import atomic_numbers
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.io.ase import AseAtomsAdaptor
 from .potentials import BVSEPotential
@@ -33,7 +33,7 @@ class Lain:
         Will print progress steps if True
     """   
 
-    def __init__(self, verbose = True, use_softbv_covalent_radii = False):
+    def __init__(self, verbose = True):
 
         self.verbose = verbose
         self.params_path = self._resource_path('data')
@@ -41,7 +41,6 @@ class Lain:
         self.anion_file = os.path.join(self.params_path, 'anion.pkl')
         self.quantum_file = os.path.join(self.params_path, 'quantum_n.pkl')
         self.radii_file = os.path.join(self.params_path, 'shannon-radii.json')
-        self._use_softbv_covalent_radii = use_softbv_covalent_radii
     
 
 
@@ -209,7 +208,7 @@ class Lain:
 
 
 
-    def _get_params(self, mobile_ion = None):
+    def _get_params(self, mobile_ion = None, use_softbv_covalent_radii = False):
         
         """ 
         
@@ -220,6 +219,8 @@ class Lain:
         mobile_ion: str,
             ion, e.g. Li1+, F1-
 
+        use_softbv_covalent_radii: boolean, False by default
+            use ASE or softBV covalent radii data
         """
 
         with open(self.quantum_file, 'rb') as f:
@@ -228,9 +229,9 @@ class Lain:
         self.framework = self.atoms_copy.copy()[self.atoms_copy.numbers != self.num_mi]
         self.atoms = self.framework
         self.n_mi = quantum_number[self.num_mi]
-        self.rc_mi = get_covalent_radii(self.num_mi, self.q_mi if self._use_softbv_covalent_radii else None)
+        self.rc_mi = get_covalent_radii(self.num_mi, self.q_mi if use_softbv_covalent_radii else None)
         numbers, oxi_states = self.atoms.numbers, self.atoms.arrays['oxi_states']
-        rc = np.array([get_covalent_radii(num, q if self._use_softbv_covalent_radii else None) for num, q in zip(numbers, oxi_states)])
+        rc = np.array([get_covalent_radii(num, q if use_softbv_covalent_radii else None) for num, q in zip(numbers, oxi_states)])
         self.atoms.set_array('r_c', rc)
         self.atoms.set_array('n', np.array([quantum_number[num] for num in self.atoms.numbers]))
         charges = self.atoms.get_array('oxi_states')
@@ -573,7 +574,7 @@ class Lain:
     
     
     def bvse_distribution(self, mobile_ion = None, r_cut = 10,
-                          resolution = 0.2, k = 100, f = 0.74):
+                          resolution = 0.2, k = 100, f = 0.74, use_softbv_covalent_radii = False):
         
         """ 
         Calculate BVSE distribution for a given mobile ion.
@@ -595,6 +596,12 @@ class Lain:
             
         k: int, 100 by default
             maximum number of neighbours (used for KDTree search of neighbors)
+
+        f: float, 0.74 by default
+            screening factor
+
+        use_softbv_covalent_radii: boolean, False by default
+            use ASE or softBV covalent radii data
         
         Returns
         ----------
@@ -608,7 +615,7 @@ class Lain:
         if self.verbose:
             print('getting BVSE distribution...')
         
-        self._get_params(mobile_ion)
+        self._get_params(mobile_ion, use_softbv_covalent_radii = use_softbv_covalent_radii)
         _, distances, ids, numbers =  self._neighbors(r_cut = r_cut,
                                                      resolution = resolution,
                                                      k = k)

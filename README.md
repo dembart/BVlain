@@ -25,15 +25,14 @@ pip install bvlain
 from bvlain import Lain
 
 file = './Downloads/LiFePO4.cif'
-calc = Lain(verbose = False, 
-            use_softbv_covalent_radii = False # default is False, use True to compare results with softBV
-            )
+calc = Lain(verbose = False)
 atoms = calc.read_file(file)       # alternatively, you can use read_atoms() or read_structure()
 
-params = {'mobile_ion': 'Li1+',    # mobile specie
-		  'r_cut': 10.0,           # cutoff for interaction between the mobile species and framework
-		  'resolution': 0.2,	   # distance between the grid points
-		  'k': 100                 # maximum number of neighbors to be collected for each point
+params = {'mobile_ion': 'Li1+',              # mobile specie
+		  'r_cut': 10.0,                     # cutoff for interaction between the mobile species and framework
+		  'resolution': 0.2,	             # distance between the grid points
+		  'k': 100,                          # maximum number of neighbors to be collected for each point
+          'use_softbv_covalent_radii': False # default is False, use True to compare results with softBV
 }
 _ = calc.bvse_distribution(**params)
 energies = calc.percolation_barriers(encut = 5.0)
