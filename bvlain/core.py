@@ -18,6 +18,7 @@ from ase.data import atomic_numbers, covalent_radii
 from pymatgen.analysis.bond_valence import BVAnalyzer
 from pymatgen.io.ase import AseAtomsAdaptor
 from .potentials import BVSEPotential
+from .data.covalent_radii import get_covalent_radii
 
 
 
@@ -32,7 +33,7 @@ class Lain:
         Will print progress steps if True
     """   
 
-    def __init__(self, verbose = True):
+    def __init__(self, verbose = True, use_softbv_covalent_radii = False):
 
         self.verbose = verbose
         self.params_path = self._resource_path('data')
@@ -40,6 +41,7 @@ class Lain:
         self.anion_file = os.path.join(self.params_path, 'anion.pkl')
         self.quantum_file = os.path.join(self.params_path, 'quantum_n.pkl')
         self.radii_file = os.path.join(self.params_path, 'shannon-radii.json')
+        self._use_softbv_covalent_radii = use_softbv_covalent_radii
     
 
 
@@ -204,9 +206,9 @@ class Lain:
         scale_c = 2*np.ceil(r_cut/min(c*np.sin(beta), c*np.sin(beta))) + 1
         scale = np.vstack([[scale_a, 0, 0], [0, scale_b, 0], [0, 0, scale_c]])
         return scale
-    
-    
-    
+
+
+
     def _get_params(self, mobile_ion = None):
         
         """ 
@@ -222,13 +224,14 @@ class Lain:
 
         with open(self.quantum_file, 'rb') as f:
             quantum_number = pickle.load(f) 
-            
         self.num_mi, self.q_mi = self._decompose(mobile_ion)
         self.framework = self.atoms_copy.copy()[self.atoms_copy.numbers != self.num_mi]
         self.atoms = self.framework
         self.n_mi = quantum_number[self.num_mi]
-        self.rc_mi = covalent_radii[self.num_mi]
-        self.atoms.set_array('r_c', np.array([covalent_radii[num] for num in self.atoms.numbers]))
+        self.rc_mi = get_covalent_radii(self.num_mi, self.q_mi if self._use_softbv_covalent_radii else None)
+        numbers, oxi_states = self.atoms.numbers, self.atoms.arrays['oxi_states']
+        rc = np.array([get_covalent_radii(num, q if self._use_softbv_covalent_radii else None) for num, q in zip(numbers, oxi_states)])
+        self.atoms.set_array('r_c', rc)
         self.atoms.set_array('n', np.array([quantum_number[num] for num in self.atoms.numbers]))
         charges = self.atoms.get_array('oxi_states')
         r_min = list()

@@ -25,7 +25,9 @@ pip install bvlain
 from bvlain import Lain
 
 file = './Downloads/LiFePO4.cif'
-calc = Lain(verbose = False)
+calc = Lain(verbose = False, 
+            use_softbv_covalent_radii = False # default is False, use True to compare results with softBV
+            )
 atoms = calc.read_file(file)       # alternatively, you can use read_atoms() or read_structure()
 
 params = {'mobile_ion': 'Li1+',    # mobile specie
